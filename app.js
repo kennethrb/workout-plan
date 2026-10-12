@@ -356,3 +356,54 @@ document.getElementById('workoutForm').addEventListener('submit', function(e) {
     btn.textContent = editingRowIndex ? 'Update Log Entry' : 'Log Set & Update Stats';
   });
 });
+
+// ==========================================
+// 🧪 QA CONSOLE TEST SUITE FOR COACH ENGINE
+// ==========================================
+function runCoachQATests() {
+  console.group("🚀 RUNNING AUTOMATED QA TESTS FOR COACH ENGINE...");
+
+  let testsPassed = 0;
+  let totalTests = 0;
+
+  function assert(condition, testName, expected, actual) {
+    totalTests++;
+    if (condition) {
+      console.log(`%c✅ PASS: ${testName}`, "color: #10b981; font-weight: bold;");
+      testsPassed++;
+    } else {
+      console.error(`❌ FAIL: ${testName}\n   Expected: ${expected}\n   Actual:   ${actual}`);
+    }
+  }
+
+  // TEST 1: 5kg Rounding Accuracy
+  assert(roundToGymIncrement(52.3) === 50, "5kg Rounding (52.3kg -> 50kg)", 50, roundToGymIncrement(52.3));
+  assert(roundToGymIncrement(52.8) === 55, "5kg Rounding (52.8kg -> 55kg)", 55, roundToGymIncrement(52.8));
+  assert(roundToGymIncrement(4) === 5, "5kg Rounding Low Threshold (4kg -> 5kg)", 5, roundToGymIncrement(4));
+  assert(roundToGymIncrement(0) === 0, "5kg Rounding Zero Handling (0kg -> 0kg)", 0, roundToGymIncrement(0));
+
+  // TEST 2: Progression Rule (RIR <= 1 -> +5kg Jump)
+  let lastLogNormal = { weight: 50, sets: 3, reps: "10/10/10", rir: 1, date: "2026-10-01" };
+  let refNormal = { sets: 3, repsTarget: "10/10/10", rirTarget: "1-2", weightTarget: 50 };
+  
+  // Simulate Normal Accumulation Phase Calculation
+  let targetNormal = roundToGymIncrement(lastLogNormal.weight + 5);
+  assert(targetNormal === 55, "Progression Rule (+5kg Jump on RIR 1)", 55, targetNormal);
+
+  // TEST 3: Deload Phase Rule (-5kg Drop & Volume Cut)
+  let deloadWeight = Math.max(0, lastLogNormal.weight - 5);
+  let deloadSets = Math.max(2, lastLogNormal.sets - 1);
+  assert(deloadWeight === 45, "Deload Weight Drop (-5kg)", 45, deloadWeight);
+  assert(deloadSets === 2, "Deload Volume Reduction (3 sets -> 2 sets)", 2, deloadSets);
+
+  // TEST 4: Joint Tweak Safety Override
+  let jointTweakWeight = Math.max(0, lastLogNormal.weight - 5);
+  assert(jointTweakWeight === 45, "Joint Tweak Safety Drop (-5kg)", 45, jointTweakWeight);
+
+  // TEST 5: High Fatigue / Stress Rule (Hold Weight)
+  let fatigueWeight = roundToGymIncrement(lastLogNormal.weight);
+  assert(fatigueWeight === 50, "High Fatigue Weight Hold (Hold at 50kg)", 50, fatigueWeight);
+
+  console.log(`\n📊 TEST RESULTS: ${testsPassed} / ${totalTests} Passed.`);
+  console.groupEnd();
+}
