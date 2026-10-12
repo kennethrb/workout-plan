@@ -1,103 +1,127 @@
 :root {
-  --bg-color: #0f172a;
-  --card-bg: #1e293b;
-  --border-color: #334155;
+  --bg-color: #090d16;
+  --card-bg: #131c2e;
+  --card-border: #1e293b;
+  --card-border-glow: #3b82f640;
   --text-main: #f8fafc;
   --text-muted: #94a3b8;
   --primary: #3b82f6;
   --primary-hover: #2563eb;
   --success: #10b981;
   --warning: #f59e0b;
+  --danger: #ef4444;
+  --radius-lg: 20px;
+  --radius-md: 12px;
 }
 
 body {
   background-color: var(--bg-color);
   color: var(--text-main);
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  padding-bottom: 60px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  padding-bottom: 80px;
   margin: 0;
   -webkit-tap-highlight-color: transparent;
+  -webkit-font-smoothing: antialiased;
 }
 
 .app-container {
-  max-width: 600px;
+  max-width: 540px;
   margin: 0 auto;
-  padding: 16px;
+  padding: 20px 16px;
 }
 
 .brand-header {
   text-align: center;
-  margin-bottom: 24px;
+  margin-bottom: 28px;
 }
 
 .brand-header h2 {
-  font-size: 1.5rem;
-  font-weight: 700;
-  letter-spacing: -0.025em;
+  font-size: 1.75rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
   margin: 0;
 }
 
 .card {
   background-color: var(--card-bg);
-  border: 1px solid var(--border-color);
-  border-radius: 16px;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
   color: var(--text-main);
-  padding: 20px;
-  margin-bottom: 16px;
+  padding: 24px;
+  margin-bottom: 20px;
+  backdrop-filter: blur(10px);
 }
 
 .form-label {
-  font-weight: 500;
-  font-size: 0.9rem;
+  font-weight: 600;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
   color: var(--text-muted);
-  margin-bottom: 6px;
+  margin-bottom: 8px;
 }
 
 .form-control, .form-select {
-  background-color: #0f172a !important;
+  background-color: #0b111e !important;
   color: var(--text-main) !important;
-  border: 1px solid var(--border-color) !important;
-  border-radius: 10px;
-  padding: 12px 14px;
+  border: 1px solid var(--card-border) !important;
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
   font-size: 1rem;
-  min-height: 48px; /* Touch-friendly mobile size */
+  min-height: 52px;
+  transition: all 0.2s ease;
 }
 
 .form-control:focus, .form-select:focus {
   border-color: var(--primary) !important;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25) !important;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15) !important;
+  background-color: #0f172a !important;
 }
 
 .advisor-box {
-  background-color: rgba(59, 130, 246, 0.08);
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.08) 0%, rgba(37, 99, 235, 0.03) 100%);
+  border: 1px solid rgba(59, 130, 246, 0.2);
   border-left: 4px solid var(--primary);
-  padding: 14px;
-  border-radius: 8px;
-  margin-bottom: 20px;
+  padding: 16px;
+  border-radius: var(--radius-md);
+  margin-bottom: 24px;
 }
 
 .balance-box {
-  background-color: rgba(16, 185, 129, 0.08);
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(5, 150, 105, 0.03) 100%);
+  border: 1px solid rgba(16, 185, 129, 0.2);
   border-left: 4px solid var(--success);
-  padding: 14px;
-  border-radius: 8px;
+  padding: 16px;
+  border-radius: var(--radius-md);
   margin-bottom: 20px;
 }
 
 .btn-primary {
-  background-color: var(--primary);
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
   border: none;
-  border-radius: 12px;
-  padding: 14px;
-  font-weight: 600;
+  border-radius: var(--radius-md);
+  padding: 16px;
+  font-weight: 700;
   font-size: 1rem;
-  min-height: 50px;
-  transition: background-color 0.2s;
+  letter-spacing: 0.02em;
+  min-height: 54px;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+  transition: all 0.2s ease;
 }
 
 .btn-primary:hover, .btn-primary:active {
-  background-color: var(--primary-hover);
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
+}
+
+.list-group-item {
+  background-color: transparent !important;
+  border-color: var(--card-border) !important;
 }
 
 #loading {
