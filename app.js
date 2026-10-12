@@ -11,16 +11,6 @@ function fetchData() {
   fetch(API_URL)
     .then(res => res.json())
     .then(data => {
-      // --- CONSOLE LOG TEST ---
-      console.log("RAW BACKEND DATA RECEIVED:", data);
-      if (data.history && data.history.length > 0) {
-        console.log("First history item date:", data.history[0].date);
-      }
-      Object.keys(data.lastLogs || {}).forEach(ex => {
-        console.log(`Last log for ${ex}:`, data.lastLogs[ex].date);
-      });
-      // ------------------------
-
       globalData = data;
       initApp();
     })
@@ -122,6 +112,27 @@ function evaluatePhysiqueBalance() {
   balanceText.innerHTML = analysis;
 }
 
+// Helper to format timestamp neatly: e.g. "Mon, Oct 12 • 02:30 PM"
+function formatDateString(dateStr) {
+  if (!dateStr) return '';
+  try {
+    let d = new Date(dateStr);
+    if (isNaN(d)) return dateStr;
+
+    let options = { 
+      weekday: 'short', 
+      month: 'short', 
+      day: 'numeric', 
+      hour: '2-digit', 
+      minute: '2-digit',
+      hour12: true 
+    };
+    return d.toLocaleString('en-US', options).replace(',', ' •');
+  } catch (e) {
+    return dateStr;
+  }
+}
+
 function renderHistoryList() {
   const container = document.getElementById('historyContainer');
   const searchQuery = document.getElementById('historySearch').value.toLowerCase();
@@ -143,12 +154,12 @@ function renderHistoryList() {
 
   let html = '<div class="list-group list-group-flush bg-transparent">';
   visibleItems.forEach(item => {
-    // item.date is used directly as a raw string to maintain exact Sheet format
+    let cleanDate = formatDateString(item.date);
     html += `
       <div class="list-group-item bg-transparent text-light border-secondary d-flex justify-content-between align-items-center py-2 px-0">
         <div class="small text-truncate me-2">
           <span class="fw-bold text-primary">${item.exercise}</span> <span class="text-muted">(${item.workoutDay})</span><br>
-          <span>${item.date} | Wt: ${item.weight}kg | Sets: ${item.sets} | Reps: ${item.reps} | RIR: ${item.rir}</span>
+          <span class="text-light">${cleanDate} | Wt: ${item.weight}kg | Sets: ${item.sets} | Reps: ${item.reps} | RIR: ${item.rir}</span>
         </div>
         <div class="btn-group btn-group-sm flex-shrink-0">
           <button class="btn btn-outline-warning py-0 px-2" onclick='editLogEntry(${JSON.stringify(item)})'>Edit</button>
@@ -235,8 +246,8 @@ function updateProgressionAdvice() {
   if (!last) {
     html += `<div class="text-warning mt-1">No prior logs found. Start with your baseline target!</div>`;
   } else {
-    // last.date is used directly as a raw string to display exact Sheet formatting
-    html += `<div class="mb-1">📊 <b>Last Session (${last.date}):</b> ${last.weight} ${last.weightUnit === 'Bodyweight' ? '(BW)' : 'kg'}, ${last.sets} sets, Reps/Sec: [${last.reps}], RIR: ${last.rir}</div>`;
+    let cleanLastDate = formatDateString(last.date);
+    html += `<div class="mb-1">📊 <b>Last Session (${cleanLastDate}):</b> ${last.weight} ${last.weightUnit === 'Bodyweight' ? '(BW)' : 'kg'}, ${last.sets} sets, Reps/Sec: [${last.reps}], RIR: ${last.rir}</div>`;
     
     let suggestion = "";
     if (last.rir <= 2) {
