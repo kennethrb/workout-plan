@@ -1,7 +1,7 @@
-// PASTE YOUR DEPLOYED GOOGLE APPS SCRIPT WEB APP URL HERE:
 const API_URL = "https://script.google.com/macros/s/AKfycbxZNsbt0S6EYYqbma4_nRMjNJFt4d-84qt1noBVy97ol2wuuiVZzs8xBSJEn4TRlekj/exec";
 
 let globalData = {};
+let editingRowIndex = null; // null means new log; number means editing existing row
 
 window.addEventListener('DOMContentLoaded', function() {
   fetchData();
@@ -30,8 +30,11 @@ function initApp() {
     checkTimedExercise();
   });
 
+  document.getElementById('historySearch').addEventListener('input', renderHistoryList);
+
   updateExerciseDropdown();
   evaluatePhysiqueBalance();
+  renderHistoryList();
 }
 
 function updateExerciseDropdown() {
@@ -101,12 +104,106 @@ function evaluatePhysiqueBalance() {
   let analysis = `<b>Average Lifts:</b> Upper (~${avgUpper.toFixed(1)} kg) vs Lower (~${avgLower.toFixed(1)} kg)<br>`;
   
   if (avgLower > 0 && avgUpper > 0 && avgLower < avgUpper * 1.1) {
-    analysis += `⚠️ <strong class="text-warning">Chicken leg risk detected!</strong> Boost intensity on <b>Lower Strength</b> days to build balanced proportions.`;
+    analysis += `⚠️ <strong class="text-warning">Chicken leg risk detected!</strong> Boost intensity on <b>Lower Strength</b> days.`;
   } else {
     analysis += `✅ <strong class="text-success">Well balanced!</strong> Upper and lower proportions look solid.`;
   }
 
   balanceText.innerHTML = analysis;
+}
+
+function renderHistoryList() {
+  const container = document.getElementById('historyContainer');
+  const searchQuery = document.getElementById('historySearch').value.toLowerCase();
+  const history = globalData.history || [];
+  
+  const filteredHistory = history.filter(item => 
+    item.exercise.toLowerCase().includes(searchQuery) ||
+    item.workoutDay.toLowerCase().includes(searchQuery) ||
+    item.date.toLowerCase().includes(searchQuery)
+  );
+
+  if (filteredHistory.length === 0) {
+    container.innerHTML = '<p class="text-muted small mb-0">No matching workout logs found.</p>';
+    return;
+  }
+
+  const displayLimit = searchQuery ? filteredHistory.length : 5;
+  const visibleItems = filteredHistory.slice(0, displayLimit);
+
+  let html = '<div class="list-group list-group-flush bg-transparent">';
+  visibleItems.forEach(item => {
+    html += `
+      <div class="list-group-item bg-transparent text-light border-secondary d-flex justify-content-between align-items-center py-2 px-0">
+        <div class="small text-truncate me-2">
+          <span class="fw-bold text-primary">${item.exercise}</span> <span class="text-muted">(${item.workoutDay})</span><br>
+          <span>${item.date} | Wt: ${item.weight}kg | Sets: ${item.sets} | Reps: ${item.reps} | RIR: ${item.rir}</span>
+        </div>
+        <div class="btn-group btn-group-sm flex-shrink-0">
+          <button class="btn btn-outline-warning py-0 px-2" onclick='editLogEntry(${JSON.stringify(item)})'>Edit</button>
+          <button class="btn btn-outline-danger py-0 px-2" onclick="deleteLogEntry(${item.rowIndex})">Del</button>
+        </div>
+      </div>
+    `;
+  });
+  html += '</div>';
+
+  if (!searchQuery && filteredHistory.length > 5) {
+    html += `<div class="text-center mt-2"><small class="text-muted">Showing latest 5 of ${filteredHistory.length} entries. Use search above to find more.</small></div>`;
+  }
+
+  container.innerHTML = html;
+}
+
+function editLogEntry(item) {
+  editingRowIndex = item.rowIndex;
+  
+  document.getElementById('workoutDay').value = item.workoutDay;
+  updateExerciseDropdown(); 
+  
+  document.getElementById('exerciseSelect').value = item.exercise;
+  checkTimedExercise();
+  
+  document.getElementById('weightUnit').value = item.weightUnit;
+  document.getElementById('weight').value = item.weight;
+  document.getElementById('sets').value = item.sets;
+  document.getElementById('reps').value = item.reps;
+  document.getElementById('rir').value = item.rir;
+
+  // Change button text and show cancel button
+  document.getElementById('submitBtn').textContent = 'Update Log Entry';
+  document.getElementById('cancelEditBtn').style.display = 'inline-block';
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function cancelEdit() {
+  editingRowIndex = null;
+  document.getElementById('workoutForm').reset();
+  document.getElementById('submitBtn').textContent = 'Log Set & Update Stats';
+  document.getElementById('cancelEditBtn').style.display = 'none';
+  updateExerciseDropdown();
+}
+
+function deleteLogEntry(rowIndex) {
+  if (!confirm("Are you sure you want to delete this log entry?")) return;
+
+  fetch(API_URL, {
+    method: 'POST',
+    body: JSON.stringify({ action: "delete", rowIndex: rowIndex })
+  })
+  .then(res => res.json())
+  .then(res => {
+    alert(res.message);
+    if (editingRowIndex === rowIndex) {
+      cancelEdit();
+    }
+    fetchData();
+  })
+  .catch(err => {
+    alert("Error deleting entry.");
+    console.error(err);
+  });
 }
 
 function updateProgressionAdvice() {
@@ -126,23 +223,15 @@ function updateProgressionAdvice() {
   if (!last) {
     html += `<div class="text-warning mt-1">No prior logs found. Start with your baseline target!</div>`;
   } else {
-    let formattedDate = last.date;
-    try {
-      let d = new Date(last.date);
-      if (!isNaN(d)) {
-        formattedDate = d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      }
-    } catch (e) {}
-
-    html += `<div class="mb-1">📊 <b>Last Session (${formattedDate}):</b> ${last.weight} ${last.weightUnit === 'Bodyweight' ? '(BW)' : 'kg'}, ${last.sets} sets, Reps/Sec: [${last.reps}], RIR: ${last.rir}</div>`;
+    html += `<div class="mb-1">📊 <b>Last Session (${last.date}):</b> ${last.weight} ${last.weightUnit === 'Bodyweight' ? '(BW)' : 'kg'}, ${last.sets} sets, Reps/Sec: [${last.reps}], RIR: ${last.rir}</div>`;
     
     let suggestion = "";
     if (last.rir <= 2) {
-      suggestion = `🚀 <strong class="text-success">Recommendation: Ready to INCREASE WEIGHT / TIME!</strong> Hit target RIR cleanly. Bump up intensity next session.`;
+      suggestion = `🚀 <strong class="text-success">Recommendation: Ready to INCREASE WEIGHT / TIME!</strong>`;
     } else if (last.rir > 2) {
-      suggestion = `📌 <strong class="text-warning">Recommendation: Hold weight & Add Reps/Sec.</strong> RIR was high. Lock in clean performance.`;
+      suggestion = `📌 <strong class="text-warning">Recommendation: Hold weight & Add Reps/Sec.</strong>`;
     } else {
-      suggestion = `📈 <strong class="text-info">Recommendation: Progress steadily.</strong> Keep matching your baseline.`;
+      suggestion = `📈 <strong class="text-info">Recommendation: Progress steadily.</strong>`;
     }
     html += `<div class="mt-2 text-light">${suggestion}</div>`;
   }
@@ -153,9 +242,11 @@ document.getElementById('workoutForm').addEventListener('submit', function(e) {
   e.preventDefault();
   const btn = document.getElementById('submitBtn');
   btn.disabled = true;
-  btn.textContent = 'Saving to Sheet...';
+  btn.textContent = editingRowIndex ? 'Updating...' : 'Saving...';
 
   const payload = {
+    action: editingRowIndex ? "update" : "insert",
+    rowIndex: editingRowIndex,
     workoutDay: document.getElementById('workoutDay').value,
     exercise: document.getElementById('exerciseSelect').value,
     weightUnit: document.getElementById('weightUnit').value,
@@ -172,14 +263,14 @@ document.getElementById('workoutForm').addEventListener('submit', function(e) {
   .then(res => res.json())
   .then(res => {
     alert(res.message);
-    fetchData();
+    cancelEdit(); // Clears form, resets button, hides cancel button, and resets editing index
+    fetchData();  // Reloads fresh data
     btn.disabled = false;
-    btn.textContent = 'Log Set & Update Stats';
   })
   .catch(err => {
     alert("Error saving workout.");
     console.error(err);
     btn.disabled = false;
-    btn.textContent = 'Log Set & Update Stats';
+    btn.textContent = editingRowIndex ? 'Update Log Entry' : 'Log Set & Update Stats';
   });
 });
