@@ -55,8 +55,13 @@ function showToast(message) {
   const toastEl = document.getElementById('successToast');
   const toastMsg = document.getElementById('toastMessage');
   toastMsg.textContent = message;
-  const toast = new bootstrap.Toast(toastEl, { delay: 3000 });
-  toast.show();
+  
+  if (typeof bootstrap !== 'undefined' && bootstrap.Toast) {
+    const toast = new bootstrap.Toast(toastEl, { delay: 3000 });
+    toast.show();
+  } else {
+    console.log("Toast Notice:", message);
+  }
 }
 
 function updateExerciseDropdown() {
@@ -342,11 +347,13 @@ function renderHistoryList() {
   visibleItems.forEach(item => {
     let cleanDate = formatDateString(item.date);
     let coachBadge = item.sleep ? `<br><small class="text-info">Sleep: ${item.sleep} | Stress: ${item.stress} | Phase: ${item.phase}</small>` : '';
+    // Strip leading single quote for display if present
+    let cleanReps = (item.reps || "").toString().replace(/^'/, '');
     html += `
       <div class="list-group-item bg-transparent text-light border-secondary d-flex justify-content-between align-items-center py-2 px-0">
         <div class="small text-truncate me-2">
           <span class="fw-bold text-primary">${item.exercise}</span> <span class="text-muted">(${item.workoutDay})</span><br>
-          <span class="text-light">${cleanDate} | Wt: ${item.weight}kg | Sets: ${item.sets} | Reps: ${item.reps} | RIR: ${item.rir}</span>
+          <span class="text-light">${cleanDate} | Wt: ${item.weight}kg | Sets: ${item.sets} | Reps: ${cleanReps} | RIR: ${item.rir}</span>
           ${coachBadge}
         </div>
         <div class="btn-group btn-group-sm flex-shrink-0">
@@ -370,7 +377,7 @@ function editLogEntry(item) {
   document.getElementById('weightUnit').value = item.weightUnit;
   document.getElementById('weight').value = item.weight;
   document.getElementById('sets').value = item.sets;
-  document.getElementById('reps').value = item.reps;
+  document.getElementById('reps').value = (item.reps || "").toString().replace(/^'/, '');
   document.getElementById('rir').value = item.rir;
   
   if(item.sleep) document.getElementById('sleep').value = item.sleep;
@@ -569,7 +576,8 @@ document.getElementById('workoutForm').addEventListener('submit', function(e) {
     weightUnit: document.getElementById('weightUnit').value,
     weight: parseFloat(document.getElementById('weight').value) || 0,
     sets: parseInt(document.getElementById('sets').value) || 0,
-    reps: document.getElementById('reps').value,
+    // Fix: Prepend apostrophe to force Google Sheets plain-text formatting (prevents date auto-format like 6/6/2006)
+    reps: "'" + document.getElementById('reps').value.trim(),
     rir: parseInt(document.getElementById('rir').value) || 0,
     sleep: document.getElementById('sleep').value,
     stress: document.getElementById('stress').value,
