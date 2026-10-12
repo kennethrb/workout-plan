@@ -127,19 +127,16 @@
       } else {
         html += `<b>Last Session (${last.date}):</b> ${last.weight} ${last.weightUnit === 'Bodyweight' ? '(BW)' : 'kg'}, ${last.sets} sets, Reps: [${last.reps}], RIR: ${last.rir}<br>`;
         
-        // Progression Logic Engine
-        let targetRepsStr = String(ref.repsTarget || "");
         let suggestion = "";
         
-        // Check if hit or exceeded target reps and kept RIR <= target
         if (last.rir <= 2) {
-          suggestion = `🚀 <strong class=\"text-success\">Recommendation: Ready to INCREASE WEIGHT!</strong> You hit target RIR with solid form. Bump up the weight by 1-2.5 kg next session.`;
+          suggestion = `🚀 <strong class="text-success">Recommendation: Ready to INCREASE WEIGHT!</strong> You hit target RIR with solid form. Bump up the weight by 1-2.5 kg next session.`;
         } else if (last.rir > 2) {
-          suggestion = `📌 <strong class=\"text-warning\">Recommendation: Hold weight & Add Reps.</strong> RIR was high. Keep current weight and aim to lock in clean reps across all sets.`;
+          suggestion = `📌 <strong class="text-warning">Recommendation: Hold weight & Add Reps.</strong> RIR was high. Keep current weight and aim to lock in clean reps across all sets.`;
         } else {
-          suggestion = `📈 <strong class=\"text-info\">Recommendation: Progress steadily.</strong> Keep matching your baseline.`;
+          suggestion = `📈 <strong class="text-info">Recommendation: Progress steadily.</strong> Keep matching your baseline.`;
         }
-        html += `<div class=\"mt-2 text-info\">${suggestion}</div>`;
+        html += `<div class="mt-2 text-info">${suggestion}</div>`;
       }
       box.innerHTML = html;
     }
