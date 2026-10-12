@@ -184,8 +184,18 @@ function calculatePlates(targetWeight) {
   let barbell = 20; // Standard Olympic Bar
   if (targetWeight <= barbell) return "Just the bar (20kg)";
   
+  // If target weight requires a 2.5kg per side offset (odd 5kg jumps like 65kg),
+  // round it to the nearest even 10kg plate increment (e.g., 60kg or 70kg)
+  let adjustedWeight = Math.round((targetWeight - barbell) / 10) * 10 + barbell;
+  let note = "";
+  
+  if (adjustedWeight !== targetWeight) {
+    note = ` (Adjusted from ${targetWeight}kg to nearest 10kg step)`;
+    targetWeight = adjustedWeight;
+  }
+
   let remainingPerSide = (targetWeight - barbell) / 2;
-  let availablePlates = [25, 20, 15, 10, 5]; // Gym plate sizes
+  let availablePlates = [25, 20, 15, 10, 5]; // Only 5kg and up!
   let breakdown = [];
 
   availablePlates.forEach(plate => {
@@ -196,7 +206,8 @@ function calculatePlates(targetWeight) {
     }
   });
 
-  return breakdown.length > 0 ? breakdown.join(" + ") + " per side" : "Custom plate setup";
+  let plateStr = breakdown.length > 0 ? breakdown.join(" + ") + " per side" : "Custom plate setup";
+  return plateStr + note;
 }
 
 function renderHistoryList() {
