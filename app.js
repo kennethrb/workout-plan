@@ -112,7 +112,6 @@ function evaluatePhysiqueBalance() {
   balanceText.innerHTML = analysis;
 }
 
-// Helper to format timestamp neatly: e.g. "Mon, Oct 12 • 02:30 PM"
 function formatDateString(dateStr) {
   if (!dateStr) return '';
   try {
@@ -224,7 +223,7 @@ function deleteLogEntry(rowIndex) {
     fetchData();
   })
   .catch(err => {
-    alert("Error deleting entry.");
+    alert("Error deleting entry: " + err);
     console.error(err);
   });
 }
@@ -292,8 +291,8 @@ document.getElementById('workoutForm').addEventListener('submit', function(e) {
     btn.disabled = false;
   })
   .catch(err => {
-    alert("Error saving workout.");
-    console.error(err);
+    alert("Error saving workout: " + err);
+    console.error("Detailed save error:", err);
     btn.disabled = false;
     btn.textContent = editingRowIndex ? 'Update Log Entry' : 'Log Set & Update Stats';
   });
