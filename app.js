@@ -2,6 +2,7 @@ const API_URL = "https://script.google.com/macros/s/AKfycbxZNsbt0S6EYYqbma4_nRMj
 
 let globalData = {};
 let editingRowIndex = null;
+let currentPrescription = null; // Stores target values for 1-click apply
 
 window.addEventListener('DOMContentLoaded', function() {
   fetchData();
@@ -24,14 +25,10 @@ function initApp() {
   document.getElementById('loading').style.display = 'none';
   document.getElementById('app-content').style.display = 'block';
 
-  // Automatically apply the backend's calculated training phase
-  const phaseSelect = document.getElementById('phase');
-  if (phaseSelect && globalData.currentPhase) {
-    phaseSelect.value = globalData.currentPhase;
-  }
-
-  if (globalData.cycleWeek) {
-    console.log(`Active Mesocycle: Week ${globalData.cycleWeek} (${globalData.currentPhase})`);
+  // Apply backend calculated training phase
+  const phaseInput = document.getElementById('phase');
+  if (phaseInput && globalData.currentPhase) {
+    phaseInput.value = globalData.currentPhase;
   }
 
   document.getElementById('workoutDay').addEventListener('change', updateExerciseDropdown);
@@ -40,7 +37,7 @@ function initApp() {
     checkTimedExercise();
   });
 
-  ['sleep', 'stress', 'joints', 'phase'].forEach(id => {
+  ['sleep', 'stress', 'joints'].forEach(id => {
     document.getElementById(id).addEventListener('change', updateProgressionAdvice);
   });
 
@@ -146,6 +143,12 @@ function formatDateString(dateStr) {
   }
 }
 
+// Helper: Snap all weights to 5kg gym plate increments
+function roundToGymIncrement(rawWeight) {
+  if (!rawWeight || isNaN(rawWeight)) return 0;
+  return Math.round(rawWeight / 5) * 5;
+}
+
 function renderHistoryList() {
   const container = document.getElementById('historyContainer');
   const searchQuery = document.getElementById('historySearch').value.toLowerCase();
@@ -206,7 +209,6 @@ function editLogEntry(item) {
   if(item.sleep) document.getElementById('sleep').value = item.sleep;
   if(item.stress) document.getElementById('stress').value = item.stress;
   if(item.joints) document.getElementById('joints').value = item.joints;
-  if(item.phase) document.getElementById('phase').value = item.phase;
 
   document.getElementById('formTitle').textContent = `Edit Log Entry (Row ${item.rowIndex})`;
   document.getElementById('submitBtn').textContent = 'Update Log Entry';
@@ -219,7 +221,6 @@ function cancelEdit() {
   editingRowIndex = null;
   document.getElementById('workoutForm').reset();
   
-  // Re-apply auto phase after resetting form
   if (globalData.currentPhase) {
     document.getElementById('phase').value = globalData.currentPhase;
   }
@@ -260,34 +261,60 @@ function updateProgressionAdvice() {
 
   const box = document.getElementById('suggestionText');
   
-  let targetSets = ref.sets || '?';
-  let targetReps = ref.repsTarget || '?';
-  let targetRir = ref.rirTarget || '1-2';
-  let targetWt = ref.weightTarget ? `${ref.weightTarget} kg` : 'N/A';
+  let targetSets = ref.sets || 3;
+  let targetReps = ref.repsTarget || '10/10/10';
+  let targetWeight = roundToGymIncrement(ref.weightTarget || 0);
+  let rationale = "";
 
-  let html = `<div class="mb-1 text-info">🎯 <b>Reference Target:</b> ${targetSets} sets × ${targetReps} reps @ RIR ${targetRir} (Target Wt: ${targetWt})</div>`;
-  
   if (!last) {
-    html += `<div class="text-warning mt-1">No prior logs found. Start with your baseline target!</div>`;
+    rationale = "No prior logs found. Starting with your baseline library target.";
+    currentPrescription = { weight: targetWeight, sets: targetSets, reps: targetReps, rir: 1 };
   } else {
     let cleanLastDate = formatDateString(last.date);
-    html += `<div class="mb-1">📊 <b>Last Session (${cleanLastDate}):</b> ${last.weight} ${last.weightUnit === 'Bodyweight' ? '(BW)' : 'kg'}, ${last.sets} sets, Reps/Sec: [${last.reps}], RIR: ${last.rir}</div>`;
-    
-    let suggestion = "";
+    targetWeight = roundToGymIncrement(last.weight);
+    targetSets = last.sets;
+    targetReps = last.reps;
+
+    // Prescriptive Coach Rules Locked to 5kg Plate Steps
     if (phase.includes("Deload")) {
-      suggestion = `🛌 <strong class="text-info">Coach Notice (Deload Phase):</strong> Reduce working weight by 10-20% and focus strictly on movement recovery.`;
+      targetWeight = Math.max(0, targetWeight - 5);
+      targetSets = Math.max(2, last.sets - 1);
+      rationale = `🛌 <b>Deload Phase:</b> Dropped down one 5kg plate (${targetWeight}kg) with lower volume for active recovery.`;
     } else if (joints === "Mild Tweak") {
-      suggestion = `🛡️ <strong class="text-danger">Coach Safety Alert:</strong> Mild discomfort flagged. Back off intensity or swap to a stable variation today.`;
+      targetWeight = Math.max(0, targetWeight - 5);
+      rationale = `🛡️ <b>Joint Safety Mode:</b> Reduced by one 5kg plate (${targetWeight}kg) due to reported discomfort.`;
     } else if (sleep === "Poor" || stress === "High") {
-      suggestion = `⚠️ <strong class="text-warning">High Fatigue Flag:</strong> Poor sleep/stress detected. Hold your current weight and focus on clean execution rather than pushing a PR.`;
-    } else if (last.rir <= 2) {
-      suggestion = `🚀 <strong class="text-success">Coach Recommendation: Ready to INCREASE WEIGHT!</strong>`;
+      targetWeight = roundToGymIncrement(last.weight); 
+      rationale = `⚠️ <b>Fatigue Flag:</b> Holding weight steady at ${targetWeight}kg. Focus on clean form and execution.`;
+    } else if (last.rir <= 1) {
+      targetWeight = roundToGymIncrement(last.weight + 5); 
+      rationale = `🚀 <strong class="text-success">5kg Plate Jump:</strong> Crushed last session! Stepping up to <b>${targetWeight}kg</b> (your gym's 5kg plate step).`;
     } else {
-      suggestion = `📌 <strong class="text-warning">Coach Recommendation: Hold weight & Add Reps/Sec.</strong>`;
+      rationale = `📌 <strong class="text-warning">Consolidation:</strong> Hold weight at ${targetWeight}kg and build extra reps before taking the 5kg jump.`;
     }
-    html += `<div class="mt-2 text-light">${suggestion}</div>`;
+
+    currentPrescription = { weight: targetWeight, sets: targetSets, reps: targetReps, rir: last.rir <= 1 ? 2 : last.rir };
   }
+
+  let html = `
+    <div class="mb-1 text-info">🎯 <b>Prescribed Target:</b> ${currentPrescription.weight} kg | ${currentPrescription.sets} sets | Reps: [${currentPrescription.reps}]</div>
+    <div class="text-light mt-1">${rationale}</div>
+  `;
   box.innerHTML = html;
+}
+
+// 1-Click apply prescription directly into form fields
+function applyPrescription() {
+  if (!currentPrescription) return;
+  document.getElementById('weight').value = currentPrescription.weight;
+  document.getElementById('sets').value = currentPrescription.sets;
+  document.getElementById('reps').value = currentPrescription.reps;
+  document.getElementById('rir').value = currentPrescription.rir;
+  
+  // Visual button feedback
+  const btn = document.getElementById('applyPrescriptionBtn');
+  btn.textContent = '✅ Applied!';
+  setTimeout(() => { btn.textContent = '📥 Apply Prescription'; }, 1500);
 }
 
 document.getElementById('workoutForm').addEventListener('submit', function(e) {
