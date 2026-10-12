@@ -11,6 +11,16 @@ function fetchData() {
   fetch(API_URL)
     .then(res => res.json())
     .then(data => {
+      // --- CONSOLE LOG TEST ---
+      console.log("RAW BACKEND DATA RECEIVED:", data);
+      if (data.history && data.history.length > 0) {
+        console.log("First history item date:", data.history[0].date);
+      }
+      Object.keys(data.lastLogs || {}).forEach(ex => {
+        console.log(`Last log for ${ex}:`, data.lastLogs[ex].date);
+      });
+      // ------------------------
+
       globalData = data;
       initApp();
     })
