@@ -30,6 +30,11 @@ function initApp() {
     checkTimedExercise();
   });
 
+  // Listen to readiness changes to update coach advice dynamically
+  ['sleep', 'stress', 'joints', 'phase'].forEach(id => {
+    document.getElementById(id).addEventListener('change', updateProgressionAdvice);
+  });
+
   document.getElementById('historySearch').addEventListener('input', renderHistoryList);
 
   updateExerciseDropdown();
@@ -154,11 +159,13 @@ function renderHistoryList() {
   let html = '<div class="list-group list-group-flush bg-transparent">';
   visibleItems.forEach(item => {
     let cleanDate = formatDateString(item.date);
+    let coachBadge = item.sleep ? `<br><small class="text-info">Sleep: ${item.sleep} | Stress: ${item.stress} | Phase: ${item.phase}</small>` : '';
     html += `
       <div class="list-group-item bg-transparent text-light border-secondary d-flex justify-content-between align-items-center py-2 px-0">
         <div class="small text-truncate me-2">
           <span class="fw-bold text-primary">${item.exercise}</span> <span class="text-muted">(${item.workoutDay})</span><br>
           <span class="text-light">${cleanDate} | Wt: ${item.weight}kg | Sets: ${item.sets} | Reps: ${item.reps} | RIR: ${item.rir}</span>
+          ${coachBadge}
         </div>
         <div class="btn-group btn-group-sm flex-shrink-0">
           <button class="btn btn-outline-warning py-0 px-2" onclick='editLogEntry(${JSON.stringify(item)})'>Edit</button>
@@ -168,10 +175,6 @@ function renderHistoryList() {
     `;
   });
   html += '</div>';
-
-  if (!searchQuery && filteredHistory.length > 5) {
-    html += `<div class="text-center mt-2"><small class="text-muted">Showing latest 5 of ${filteredHistory.length} entries. Use search above to find more.</small></div>`;
-  }
 
   container.innerHTML = html;
 }
@@ -190,6 +193,11 @@ function editLogEntry(item) {
   document.getElementById('sets').value = item.sets;
   document.getElementById('reps').value = item.reps;
   document.getElementById('rir').value = item.rir;
+  
+  if(item.sleep) document.getElementById('sleep').value = item.sleep;
+  if(item.stress) document.getElementById('stress').value = item.stress;
+  if(item.joints) document.getElementById('joints').value = item.joints;
+  if(item.phase) document.getElementById('phase').value = item.phase;
 
   document.getElementById('formTitle').textContent = `Edit Log Entry (Row ${item.rowIndex})`;
   document.getElementById('submitBtn').textContent = 'Update Log Entry';
@@ -217,14 +225,11 @@ function deleteLogEntry(rowIndex) {
   .then(res => res.json())
   .then(res => {
     alert(res.message);
-    if (editingRowIndex === rowIndex) {
-      cancelEdit();
-    }
+    if (editingRowIndex === rowIndex) cancelEdit();
     fetchData();
   })
   .catch(err => {
     alert("Error deleting entry: " + err);
-    console.error(err);
   });
 }
 
@@ -233,6 +238,12 @@ function updateProgressionAdvice() {
   const ref = globalData.references[exercise] || {};
   const last = globalData.lastLogs[exercise] || null;
   
+  // Get current readiness inputs
+  const sleep = document.getElementById('sleep').value;
+  const stress = document.getElementById('stress').value;
+  const joints = document.getElementById('joints').value;
+  const phase = document.getElementById('phase').value;
+
   const box = document.getElementById('suggestionText');
   
   let targetSets = ref.sets || '?';
@@ -248,13 +259,18 @@ function updateProgressionAdvice() {
     let cleanLastDate = formatDateString(last.date);
     html += `<div class="mb-1">📊 <b>Last Session (${cleanLastDate}):</b> ${last.weight} ${last.weightUnit === 'Bodyweight' ? '(BW)' : 'kg'}, ${last.sets} sets, Reps/Sec: [${last.reps}], RIR: ${last.rir}</div>`;
     
+    // --- SMART COACH OVERLOAD ENGINE ---
     let suggestion = "";
-    if (last.rir <= 2) {
-      suggestion = `🚀 <strong class="text-success">Recommendation: Ready to INCREASE WEIGHT / TIME!</strong>`;
-    } else if (last.rir > 2) {
-      suggestion = `📌 <strong class="text-warning">Recommendation: Hold weight & Add Reps/Sec.</strong>`;
+    if (phase.includes("Deload")) {
+      suggestion = `🛌 <strong class="text-info">Coach Notice (Deload Phase):</strong> Reduce working weight by 10-20% and focus strictly on movement recovery.`;
+    } else if (joints === "Mild Tweak") {
+      suggestion = `🛡️ <strong class="text-danger">Coach Safety Alert:</strong> Mild discomfort flagged. Back off intensity or swap to a stable variation today.`;
+    } else if (sleep === "Poor" || stress === "High") {
+      suggestion = `⚠️ <strong class="text-warning">High Fatigue Flag:</strong> Poor sleep/stress detected. Hold your current weight and focus on clean execution rather than pushing a PR.`;
+    } else if (last.rir <= 2) {
+      suggestion = `🚀 <strong class="text-success">Coach Recommendation: Ready to INCREASE WEIGHT!</strong>`;
     } else {
-      suggestion = `📈 <strong class="text-info">Recommendation: Progress steadily.</strong>`;
+      suggestion = `📌 <strong class="text-warning">Coach Recommendation: Hold weight & Add Reps/Sec.</strong>`;
     }
     html += `<div class="mt-2 text-light">${suggestion}</div>`;
   }
@@ -276,7 +292,11 @@ document.getElementById('workoutForm').addEventListener('submit', function(e) {
     weight: parseFloat(document.getElementById('weight').value) || 0,
     sets: parseInt(document.getElementById('sets').value) || 0,
     reps: document.getElementById('reps').value,
-    rir: parseInt(document.getElementById('rir').value) || 0
+    rir: parseInt(document.getElementById('rir').value) || 0,
+    sleep: document.getElementById('sleep').value,
+    stress: document.getElementById('stress').value,
+    joints: document.getElementById('joints').value,
+    phase: document.getElementById('phase').value
   };
 
   fetch(API_URL, {
@@ -292,7 +312,6 @@ document.getElementById('workoutForm').addEventListener('submit', function(e) {
   })
   .catch(err => {
     alert("Error saving workout: " + err);
-    console.error("Detailed save error:", err);
     btn.disabled = false;
     btn.textContent = editingRowIndex ? 'Update Log Entry' : 'Log Set & Update Stats';
   });
