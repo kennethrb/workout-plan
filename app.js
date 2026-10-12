@@ -4,6 +4,7 @@ let globalData = {};
 let editingRowIndex = null;
 let currentPrescription = null; 
 let restTimerInterval = null;
+let myProgressChart = null;
 
 window.addEventListener('DOMContentLoaded', function() {
   fetchData();
@@ -46,6 +47,7 @@ function initApp() {
   updateExerciseDropdown();
   evaluatePhysiqueBalance();
   renderHistoryList();
+  initChartDropdown();
 }
 
 function updateExerciseDropdown() {
@@ -181,7 +183,6 @@ function isChickenLegRiskActive() {
 // 🔩 PLATE CALCULATOR LOGIC (Feature 2)
 // ==========================================
 function calculatePlates(targetWeight) {
-  // Read selected barbell weight dynamically (default to 20kg)
   const barSelect = document.getElementById('barbellType');
   const barbell = barSelect ? parseFloat(barSelect.value) : 20;
 
@@ -214,6 +215,99 @@ function calculatePlates(targetWeight) {
   }
 
   return `🏋️ ${plateStr} on ${barNotice} = <b>${loadableWeight}kg total</b>`;
+}
+
+// ==========================================
+// 📈 CHART VISUAL TREND ENGINE (Feature 1)
+// ==========================================
+function initChartDropdown() {
+  const select = document.getElementById('chartExerciseSelect');
+  if (!select) return;
+  select.innerHTML = '';
+
+  let exercises = Object.keys(globalData.references || {});
+  if (exercises.length === 0 && globalData.history) {
+    exercises = [...new Set(globalData.history.map(item => item.exercise))];
+  }
+
+  exercises.forEach(ex => {
+    let opt = document.createElement('option');
+    opt.value = ex;
+    opt.textContent = ex;
+    select.appendChild(opt);
+  });
+
+  renderProgressChart();
+}
+
+function renderProgressChart() {
+  const exerciseSelect = document.getElementById('chartExerciseSelect');
+  if (!exerciseSelect || !exerciseSelect.value) return;
+  
+  const selectedEx = exerciseSelect.value.toLowerCase();
+  const history = globalData.history || [];
+
+  let exerciseLogs = history
+    .filter(item => item.exercise && item.exercise.toLowerCase() === selectedEx)
+    .sort((a, b) => new Date(a.date) - new Date(b.date));
+
+  let labels = exerciseLogs.map(item => {
+    try {
+      let d = new Date(item.date);
+      return isNaN(d) ? item.date : d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    } catch (e) {
+      return item.date;
+    }
+  });
+
+  let weights = exerciseLogs.map(item => item.weight || 0);
+
+  const ctx = document.getElementById('progressChart').getContext('2d');
+  
+  if (myProgressChart) {
+    myProgressChart.destroy();
+  }
+
+  if (exerciseLogs.length === 0) {
+    labels = ['No Data'];
+    weights = [0];
+  }
+
+  myProgressChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'Working Weight (kg)',
+        data: weights,
+        borderColor: '#3b82f6',
+        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+        borderWidth: 2,
+        fill: true,
+        tension: 0.2,
+        pointBackgroundColor: '#3b82f6',
+        pointRadius: 4
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false }
+      },
+      scales: {
+        x: {
+          ticks: { color: '#94a3b8', font: { size: 10 } },
+          grid: { color: '#334155' }
+        },
+        y: {
+          ticks: { color: '#94a3b8', font: { size: 10 } },
+          grid: { color: '#334155' },
+          beginAtZero: true
+        }
+      }
+    }
+  });
 }
 
 function renderHistoryList() {
@@ -365,7 +459,6 @@ function updateProgressionAdvice() {
     currentPrescription = { weight: targetWeight, sets: targetSets, reps: targetReps, rir: last.rir <= 1 ? 2 : last.rir };
   }
 
-  // Calculate plate breakdown for the prescription
   let plateHint = currentPrescription.weight > 0 ? ` <br><small class="text-warning">🔩 Plates: ${calculatePlates(currentPrescription.weight)}</small>` : '';
 
   let html = `
@@ -411,7 +504,6 @@ function startRestTimer(seconds) {
     if (remaining < 0) {
       clearInterval(restTimerInterval);
       display.textContent = "Time to lift! 🔥";
-      // Optional audio beep could go here
     } else {
       updateDisplay();
     }
@@ -455,8 +547,6 @@ document.getElementById('workoutForm').addEventListener('submit', function(e) {
     cancelEdit(); 
     fetchData();  
     btn.disabled = false;
-    
-    // TRIGGER REST TIMER UPON SUCCESSFUL SET LOG (90 seconds rest)
     startRestTimer(90);
   })
   .catch(err => {
