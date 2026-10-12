@@ -1,0 +1,185 @@
+// PASTE YOUR DEPLOYED GOOGLE APPS SCRIPT WEB APP URL HERE:
+const API_URL = "https://script.google.com/macros/s/AKfycbxZNsbt0S6EYYqbma4_nRMjNJFt4d-84qt1noBVy97ol2wuuiVZzs8xBSJEn4TRlekj/exec";
+
+let globalData = {};
+
+window.addEventListener('DOMContentLoaded', function() {
+  fetchData();
+});
+
+function fetchData() {
+  fetch(API_URL)
+    .then(res => res.json())
+    .then(data => {
+      globalData = data;
+      initApp();
+    })
+    .catch(err => {
+      console.error("Error loading data:", err);
+      document.getElementById('loading').innerHTML = '<p class="text-danger">Failed to load workout data from backend.</p>';
+    });
+}
+
+function initApp() {
+  document.getElementById('loading').style.display = 'none';
+  document.getElementById('app-content').style.display = 'block';
+
+  document.getElementById('workoutDay').addEventListener('change', updateExerciseDropdown);
+  document.getElementById('exerciseSelect').addEventListener('change', function() {
+    updateProgressionAdvice();
+    checkTimedExercise();
+  });
+
+  updateExerciseDropdown();
+  evaluatePhysiqueBalance();
+}
+
+function updateExerciseDropdown() {
+  const workoutDay = document.getElementById('workoutDay').value;
+  const select = document.getElementById('exerciseSelect');
+  select.innerHTML = '';
+
+  let exercisesForDay = (globalData.workoutMap && globalData.workoutMap[workoutDay]) 
+                        ? globalData.workoutMap[workoutDay] 
+                        : globalData.exercises;
+
+  if (!exercisesForDay || exercisesForDay.length === 0) {
+    exercisesForDay = globalData.exercises;
+  }
+
+  exercisesForDay.forEach(ex => {
+    let opt = document.createElement('option');
+    opt.value = ex;
+    opt.textContent = ex;
+    select.appendChild(opt);
+  });
+
+  updateProgressionAdvice();
+  checkTimedExercise();
+}
+
+function checkTimedExercise() {
+  const exercise = document.getElementById('exerciseSelect').value.toLowerCase();
+  const repsLabel = document.getElementById('repsLabel');
+  const repsInput = document.getElementById('reps');
+
+  if (exercise.includes('plank') || exercise.includes('sec') || exercise.includes('hold')) {
+    repsLabel.textContent = "Duration per Set in Seconds (e.g. 60/60/60)";
+    repsInput.placeholder = "60/60/60";
+  } else {
+    repsLabel.textContent = "Reps per Set (e.g. 10/10/10)";
+    repsInput.placeholder = "10/10/10";
+  }
+}
+
+function evaluatePhysiqueBalance() {
+  const lastLogs = globalData.lastLogs || {};
+  let upperWeights = [];
+  let lowerWeights = [];
+
+  Object.keys(lastLogs).forEach(ex => {
+    let nameLower = ex.toLowerCase();
+    let wt = lastLogs[ex].weight || 0;
+    if (wt > 0 && lastLogs[ex].weightUnit !== 'Bodyweight') {
+      if (nameLower.includes('squat') || nameLower.includes('leg') || nameLower.includes('calf') || nameLower.includes('deadlift') || nameLower.includes('hip') || nameLower.includes('thrust')) {
+        lowerWeights.push(wt);
+      } else if (nameLower.includes('bench') || nameLower.includes('press') || nameLower.includes('row') || nameLower.includes('pull') || nameLower.includes('curl') || nameLower.includes('extension')) {
+        upperWeights.push(wt);
+      }
+    }
+  });
+
+  let avgUpper = upperWeights.length ? upperWeights.reduce((a, b) => a + b, 0) / upperWeights.length : 0;
+  let avgLower = lowerWeights.length ? lowerWeights.reduce((a, b) => a + b, 0) / lowerWeights.length : 0;
+
+  const balanceText = document.getElementById('balanceText');
+  if (avgUpper === 0 && avgLower === 0) {
+    balanceText.innerHTML = "Log weighted upper/lower exercises to track symmetry proportions.";
+    return;
+  }
+
+  let analysis = `<b>Average Lifts:</b> Upper (~${avgUpper.toFixed(1)} kg) vs Lower (~${avgLower.toFixed(1)} kg)<br>`;
+  
+  if (avgLower > 0 && avgUpper > 0 && avgLower < avgUpper * 1.1) {
+    analysis += `⚠️ <strong class="text-warning">Chicken leg risk detected!</strong> Boost intensity on <b>Lower Strength</b> days to build balanced proportions.`;
+  } else {
+    analysis += `✅ <strong class="text-success">Well balanced!</strong> Upper and lower proportions look solid.`;
+  }
+
+  balanceText.innerHTML = analysis;
+}
+
+function updateProgressionAdvice() {
+  const exercise = document.getElementById('exerciseSelect').value;
+  const ref = globalData.references[exercise] || {};
+  const last = globalData.lastLogs[exercise] || null;
+  
+  const box = document.getElementById('suggestionText');
+  
+  let targetSets = ref.sets || '?';
+  let targetReps = ref.repsTarget || '?';
+  let targetRir = ref.rirTarget || '1-2';
+  let targetWt = ref.weightTarget ? `${ref.weightTarget} kg` : 'N/A';
+
+  let html = `<div class="mb-1 text-info">🎯 <b>Reference Target:</b> ${targetSets} sets × ${targetReps} reps @ RIR ${targetRir} (Target Wt: ${targetWt})</div>`;
+  
+  if (!last) {
+    html += `<div class="text-warning mt-1">No prior logs found. Start with your baseline target!</div>`;
+  } else {
+    let formattedDate = last.date;
+    try {
+      let d = new Date(last.date);
+      if (!isNaN(d)) {
+        formattedDate = d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      }
+    } catch (e) {}
+
+    html += `<div class="mb-1">📊 <b>Last Session (${formattedDate}):</b> ${last.weight} ${last.weightUnit === 'Bodyweight' ? '(BW)' : 'kg'}, ${last.sets} sets, Reps/Sec: [${last.reps}], RIR: ${last.rir}</div>`;
+    
+    let suggestion = "";
+    if (last.rir <= 2) {
+      suggestion = `🚀 <strong class="text-success">Recommendation: Ready to INCREASE WEIGHT / TIME!</strong> Hit target RIR cleanly. Bump up intensity next session.`;
+    } else if (last.rir > 2) {
+      suggestion = `📌 <strong class="text-warning">Recommendation: Hold weight & Add Reps/Sec.</strong> RIR was high. Lock in clean performance.`;
+    } else {
+      suggestion = `📈 <strong class="text-info">Recommendation: Progress steadily.</strong> Keep matching your baseline.`;
+    }
+    html += `<div class="mt-2 text-light">${suggestion}</div>`;
+  }
+  box.innerHTML = html;
+}
+
+document.getElementById('workoutForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true;
+  btn.textContent = 'Saving to Sheet...';
+
+  const payload = {
+    workoutDay: document.getElementById('workoutDay').value,
+    exercise: document.getElementById('exerciseSelect').value,
+    weightUnit: document.getElementById('weightUnit').value,
+    weight: parseFloat(document.getElementById('weight').value) || 0,
+    sets: parseInt(document.getElementById('sets').value) || 0,
+    reps: document.getElementById('reps').value,
+    rir: parseInt(document.getElementById('rir').value) || 0
+  };
+
+  fetch(API_URL, {
+    method: 'POST',
+    body: JSON.stringify(payload)
+  })
+  .then(res => res.json())
+  .then(res => {
+    alert(res.message);
+    fetchData();
+    btn.disabled = false;
+    btn.textContent = 'Log Set & Update Stats';
+  })
+  .catch(err => {
+    alert("Error saving workout.");
+    console.error(err);
+    btn.disabled = false;
+    btn.textContent = 'Log Set & Update Stats';
+  });
+});
