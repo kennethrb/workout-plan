@@ -29,6 +29,47 @@
       <div class="card shadow-sm mb-4">
         <h4 class="mb-4 fs-5 fw-bold text-white" id="formTitle">Log Exercise Set</h4>
         <form id="workoutForm">
+          
+          <!-- Coach Readiness Section -->
+          <div class="p-3 mb-3 rounded-3" style="background-color: rgba(59, 130, 246, 0.05); border: 1px dashed #334155;">
+            <h6 class="text-primary fw-bold mb-2">🧠 Coach Readiness & Phase Check</h6>
+            <div class="row">
+              <div class="col-6 mb-2">
+                <label class="form-label">Sleep Quality</label>
+                <select class="form-select form-select-sm" id="sleep">
+                  <option value="Great">Great (7-9h)</option>
+                  <option value="Fair" selected>Fair (5-7h)</option>
+                  <option value="Poor">Poor (<5h)</option>
+                </select>
+              </div>
+              <div class="col-6 mb-2">
+                <label class="form-label">Life Stress</label>
+                <select class="form-select form-select-sm" id="stress">
+                  <option value="Low">Low</option>
+                  <option value="Moderate" selected>Moderate</option>
+                  <option value="High">High</option>
+                </select>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-6 mb-1">
+                <label class="form-label">Joints / Tweak</label>
+                <select class="form-select form-select-sm" id="joints">
+                  <option value="None" selected>Feeling Good</option>
+                  <option value="Mild Tweak">Mild Discomfort</option>
+                </select>
+              </div>
+              <div class="col-6 mb-1">
+                <label class="form-label">Training Phase</label>
+                <select class="form-select form-select-sm" id="phase">
+                  <option value="Accumulation (Volume)" selected>Accumulation (Volume)</option>
+                  <option value="Intensification (Peak)">Intensification (Peak)</option>
+                  <option value="Deload (Recovery)">Deload (Recovery)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
           <div class="mb-3">
             <label class="form-label">Workout Day Type</label>
             <select class="form-select" id="workoutDay" required>
@@ -45,7 +86,7 @@
           </div>
 
           <div class="advisor-box">
-            <h6 class="text-primary fw-bold mb-1">🤖 Overload Advisor</h6>
+            <h6 class="text-primary fw-bold mb-1">🤖 Overload Coach Advisor</h6>
             <div id="suggestionText" class="mt-2 text-light small">Select an exercise to analyze past performance.</div>
           </div>
 
