@@ -26,13 +26,26 @@
         <div id="balanceText" class="small text-light">Analyzing body proportions...</div>
       </div>
 
-      <!-- ⏱️ Rest Timer Widget (Initially Hidden) -->
-      <div id="restTimerWidget" class="card bg-dark border-info text-light mb-3 p-3 text-center" style="display: none;">
-        <h6 class="text-info mb-1">⏳ Rest Period Countdown</h6>
-        <div id="timerDisplay" class="display-6 fw-bold text-warning mb-2">1:30</div>
-        <div>
-          <button class="btn btn-sm btn-outline-info me-2" onclick="startRestTimer(90)">+ 90s</button>
-          <button class="btn btn-sm btn-outline-secondary" onclick="stopRestTimer()">Dismiss Timer</button>
+      <!-- ⏱️ Rest Timer Widget -->
+      <div id="restTimerWidget" class="card shadow-sm mb-4" style="display: none; border: 1px solid #38bdf8; background-color: rgba(15, 23, 42, 0.95);">
+        <div class="card-body text-center py-3">
+          <div class="d-flex align-items-center justify-content-center gap-2 mb-2">
+            <span class="fs-5">⏳</span>
+            <h6 class="text-info fw-bold mb-0" style="letter-spacing: 0.5px;">Rest Period Countdown</h6>
+          </div>
+          
+          <div id="timerDisplay" class="display-5 fw-bold text-warning my-2" style="font-family: monospace; text-shadow: 0 0 10px rgba(234, 179, 8, 0.3);">
+            1:30
+          </div>
+
+          <div class="d-flex justify-content-center gap-2 mt-3">
+            <button type="button" class="btn btn-sm btn-outline-info fw-semibold px-3" onclick="startRestTimer(90)">
+              + 90s Rest
+            </button>
+            <button type="button" class="btn btn-sm btn-outline-secondary fw-semibold px-3" onclick="stopRestTimer()">
+              Dismiss
+            </button>
+          </div>
         </div>
       </div>
 
@@ -177,6 +190,18 @@
         <div id="historyContainer">
           <p class="text-muted small mb-0">Loading history...</p>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 🔔 Sleek UI Toast Notification Container -->
+  <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1080;">
+    <div id="successToast" class="toast align-items-center text-bg-dark border-info shadow" role="alert" aria-live="assertive" aria-atomic="true">
+      <div class="d-flex">
+        <div class="toast-body fw-medium" id="toastMessage">
+          Action completed successfully!
+        </div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
       </div>
     </div>
   </div>
