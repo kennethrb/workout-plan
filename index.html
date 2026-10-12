@@ -66,7 +66,7 @@
               <input type="number" class="form-control" id="sets" required value="3">
             </div>
             <div class="col-6 mb-3">
-              <label class="form-label">Reps per Set (e.g. 10/10/10)</label>
+              <label id="repsLabel" class="form-label">Reps per Set (e.g. 10/10/10)</label>
               <input type="text" class="form-control" id="reps" required placeholder="10/10/10">
             </div>
           </div>
@@ -108,19 +108,55 @@
       document.getElementById('loading').style.display = 'none';
       document.getElementById('app-content').style.display = 'block';
 
+      // Event listeners
+      document.getElementById('workoutDay').addEventListener('change', updateExerciseDropdown);
+      document.getElementById('exerciseSelect').addEventListener('change', function() {
+        updateProgressionAdvice();
+        checkTimedExercise();
+      });
+
+      updateExerciseDropdown();
+    }
+
+    // Automatically change exercise dropdown based on workout type
+    function updateExerciseDropdown() {
+      const workoutDay = document.getElementById('workoutDay').value;
       const select = document.getElementById('exerciseSelect');
       select.innerHTML = '';
-      
-      globalData.exercises.forEach(ex => {
+
+      // Get exercises mapped to this workout day from history, or fallback to all exercises
+      let exercisesForDay = (globalData.workoutMap && globalData.workoutMap[workoutDay]) 
+                            ? globalData.workoutMap[workoutDay] 
+                            : globalData.exercises;
+
+      if (!exercisesForDay || exercisesForDay.length === 0) {
+        exercisesForDay = globalData.exercises; // ultimate fallback
+      }
+
+      exercisesForDay.forEach(ex => {
         let opt = document.createElement('option');
         opt.value = ex;
         opt.textContent = ex;
         select.appendChild(opt);
       });
 
-      select.removeEventListener('change', updateProgressionAdvice);
-      select.addEventListener('change', updateProgressionAdvice);
       updateProgressionAdvice();
+      checkTimedExercise();
+    }
+
+    // Detect if exercise is timed (e.g. Plank) vs Rep-based
+    function checkTimedExercise() {
+      const exercise = document.getElementById('exerciseSelect').value.toLowerCase();
+      const repsLabel = document.getElementById('repsLabel');
+      const repsInput = document.getElementById('reps');
+
+      if (exercise.includes('plank') || exercise.includes('sec') || exercise.includes('hold')) {
+        repsLabel.textContent = "Duration per Set in Seconds (e.g. 60/60/60)";
+        repsInput.placeholder = "60/60/60";
+      } else {
+        repsLabel.textContent = "Reps per Set (e.g. 10/10/10)";
+        repsInput.placeholder = "10/10/10";
+      }
     }
 
     function updateProgressionAdvice() {
@@ -130,29 +166,31 @@
       
       const box = document.getElementById('suggestionText');
       
-      let html = `<div class="mb-1"><b>Benchmark Target:</b> ${ref.sets || '?'} sets × ${ref.repsTarget || '?'} reps @ RIR ${ref.rirTarget || '1-2'} (Target Wt: ${ref.weightTarget || 'N/A'})</div>`;
+      let targetSets = ref.sets || '?';
+      let targetReps = ref.repsTarget || '?';
+      let targetRir = ref.rirTarget || '1-2';
+      let targetWt = ref.weightTarget ? `${ref.weightTarget} kg` : 'N/A';
+
+      let html = `<div class="mb-1 text-info">🎯 <b>Reference Target:</b> ${targetSets} sets × ${targetReps} reps @ RIR ${targetRir} (Target Wt: ${targetWt})</div>`;
       
       if (!last) {
         html += `<div class="text-warning mt-1">No prior logs found for this exercise. Start with your baseline target!</div>`;
       } else {
-        // Format the date nicely to local format
         let formattedDate = last.date;
         try {
           let d = new Date(last.date);
           if (!isNaN(d)) {
             formattedDate = d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
           }
-        } catch (e) {
-          // fallback to raw string if parsing fails
-        }
+        } catch (e) {}
 
-        html += `<div class="mb-1"><b>Last Session (${formattedDate}):</b> ${last.weight} ${last.weightUnit === 'Bodyweight' ? '(BW)' : 'kg'}, ${last.sets} sets, Reps: [${last.reps}], RIR: ${last.rir}</div>`;
+        html += `<div class="mb-1">📊 <b>Last Session (${formattedDate}):</b> ${last.weight} ${last.weightUnit === 'Bodyweight' ? '(BW)' : 'kg'}, ${last.sets} sets, Reps/Sec: [${last.reps}], RIR: ${last.rir}</div>`;
         
         let suggestion = "";
         if (last.rir <= 2) {
-          suggestion = `🚀 <strong class="text-success">Recommendation: Ready to INCREASE WEIGHT!</strong> You hit target RIR with solid form. Bump up the weight by 1-2.5 kg next session.`;
+          suggestion = `🚀 <strong class="text-success">Recommendation: Ready to INCREASE WEIGHT / TIME!</strong> You hit target RIR with solid form. Bump up the intensity next session.`;
         } else if (last.rir > 2) {
-          suggestion = `📌 <strong class="text-warning">Recommendation: Hold weight & Add Reps.</strong> RIR was high. Keep current weight and aim to lock in clean reps across all sets.`;
+          suggestion = `📌 <strong class="text-warning">Recommendation: Hold intensity & Add Reps/Sec.</strong> RIR was high. Keep current weight and aim to lock in clean performance.`;
         } else {
           suggestion = `📈 <strong class="text-info">Recommendation: Progress steadily.</strong> Keep matching your baseline.`;
         }
