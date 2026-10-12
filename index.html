@@ -3,19 +3,19 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Xtreme Workout Tracker</title>
+  <title>Xtreme Progressive Overload</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="styles.css" rel="stylesheet">
 </head>
 <body>
-  <div class="app-container mt-3">
+  <div class="app-container">
     <div class="brand-header">
       <h2>💪 Xtreme Progressive Overload</h2>
     </div>
     
     <div id="loading">
       <div class="spinner-border text-primary" role="status"></div>
-      <p class="mt-2 text-muted">Loading your workout data...</p>
+      <p class="mt-3 text-muted fw-medium">Syncing workout database...</p>
     </div>
 
     <div id="app-content" style="display: none;">
@@ -27,7 +27,7 @@
 
       <!-- Log Form Card -->
       <div class="card shadow-sm mb-4">
-        <h4 class="mb-3 fs-5" id="formTitle">Log Exercise Set</h4>
+        <h4 class="mb-4 fs-5 fw-bold text-white" id="formTitle">Log Exercise Set</h4>
         <form id="workoutForm">
           <div class="mb-3">
             <label class="form-label">Workout Day Type</label>
@@ -74,23 +74,23 @@
             </div>
           </div>
 
-          <div class="mb-3">
+          <div class="mb-4">
             <label class="form-label">RIR (Reps in Reserve)</label>
             <input type="number" class="form-control" id="rir" required value="1" min="0" max="5">
           </div>
 
           <div class="d-flex gap-2">
-            <button type="submit" class="btn btn-primary flex-grow-1 fw-bold" id="submitBtn">Log Set & Update Stats</button>
-            <button type="button" class="btn btn-outline-secondary fw-bold" id="cancelEditBtn" style="display: none;" onclick="cancelEdit()">Cancel</button>
+            <button type="submit" class="btn btn-primary flex-grow-1 fw-bold shadow-sm" id="submitBtn">Log Set & Update Stats</button>
+            <button type="button" class="btn btn-outline-secondary px-4 fw-bold rounded-3" id="cancelEditBtn" style="display: none;" onclick="cancelEdit()">Cancel</button>
           </div>
         </form>
       </div>
 
       <!-- History Search & Management Card -->
       <div class="card shadow-sm">
-        <h4 class="mb-3 fs-5">Workout History & Management</h4>
+        <h4 class="mb-3 fs-5 fw-bold text-white">Workout History & Management</h4>
         <div class="mb-3">
-          <input type="text" class="form-control" id="historySearch" placeholder="🔍 Search by exercise, day, or date...">
+          <input type="text" class="form-control" id="historySearch" placeholder="🔍 Search exercise, day, or date...">
         </div>
         <div id="historyContainer">
           <p class="text-muted small mb-0">Loading history...</p>
