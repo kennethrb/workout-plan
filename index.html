@@ -40,7 +40,7 @@
         <h4 class="mb-4 fs-5 fw-bold text-white" id="formTitle">Log Exercise Set</h4>
         <form id="workoutForm">
           
-          <!-- Coach Readiness & Auto Phase Section -->
+          <!-- Coach Readiness, Barbell & Auto Phase Section -->
           <div class="p-3 mb-3 rounded-3" style="background-color: rgba(59, 130, 246, 0.05); border: 1px dashed #334155;">
             <div class="d-flex justify-content-between align-items-center mb-2">
               <h6 class="text-primary fw-bold mb-0">🤖 Coach Readiness & Phase</h6>
@@ -65,17 +65,30 @@
                 </select>
               </div>
             </div>
+
             <div class="row">
-              <div class="col-6 mb-1">
+              <div class="col-6 mb-2">
                 <label class="form-label">Joints / Tweak</label>
                 <select class="form-select form-select-sm" id="joints">
                   <option value="None" selected>Feeling Good</option>
                   <option value="Mild Tweak">Mild Discomfort</option>
                 </select>
               </div>
-              <div class="col-6 mb-1">
+              <div class="col-6 mb-2">
                 <label class="form-label">Training Phase (Auto)</label>
                 <input type="text" class="form-control form-control-sm bg-dark text-info" id="phase" readonly value="Accumulation (Volume)">
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-12 mb-1">
+                <label class="form-label">Barbell Type (Plate Math Base)</label>
+                <select class="form-select form-select-sm" id="barbellType" onchange="updateProgressionAdvice()">
+                  <option value="20" selected>Olympic Bar (20 kg)</option>
+                  <option value="15">Women's / Tech Bar (15 kg)</option>
+                  <option value="25">Trap / HEX Bar (25 kg)</option>
+                  <option value="0">Machine / Dumbbell / Bodyweight (0 kg)</option>
+                </select>
               </div>
             </div>
           </div>
