@@ -181,33 +181,39 @@ function isChickenLegRiskActive() {
 // 🔩 PLATE CALCULATOR LOGIC (Feature 2)
 // ==========================================
 function calculatePlates(targetWeight) {
-  let barbell = 20; // Standard Olympic Bar
-  if (targetWeight <= barbell) return "Just the bar (20kg)";
-  
-  // If target weight requires a 2.5kg per side offset (odd 5kg jumps like 65kg),
-  // round it to the nearest even 10kg plate increment (e.g., 60kg or 70kg)
-  let adjustedWeight = Math.round((targetWeight - barbell) / 10) * 10 + barbell;
-  let note = "";
-  
-  if (adjustedWeight !== targetWeight) {
-    note = ` (Adjusted from ${targetWeight}kg to nearest 10kg step)`;
-    targetWeight = adjustedWeight;
-  }
+  // Read selected barbell weight dynamically (default to 20kg)
+  const barSelect = document.getElementById('barbellType');
+  const barbell = barSelect ? parseFloat(barSelect.value) : 20;
 
-  let remainingPerSide = (targetWeight - barbell) / 2;
-  let availablePlates = [25, 20, 15, 10, 5]; // Only 5kg and up!
+  if (targetWeight <= 0) return "No load";
+  if (barbell === 0) return `Total Weight: ${targetWeight} kg (Dumbbell/Machine)`;
+  if (targetWeight <= barbell) return `Just the bar (${barbell} kg)`;
+
+  let remainderPerSide = (targetWeight - barbell) / 2;
+  let needsFractional = remainderPerSide % 5 !== 0;
+
+  let loadableWeight = needsFractional ? targetWeight - 5 : targetWeight;
+  let loadablePerSide = (loadableWeight - barbell) / 2;
+
+  let availablePlates = [25, 20, 15, 10, 5];
   let breakdown = [];
 
   availablePlates.forEach(plate => {
-    let count = Math.floor(remainingPerSide / plate);
+    let count = Math.floor(loadablePerSide / plate);
     if (count > 0) {
       breakdown.push(`${count}x ${plate}kg`);
-      remainingPerSide %= plate;
+      loadablePerSide %= plate;
     }
   });
 
-  let plateStr = breakdown.length > 0 ? breakdown.join(" + ") + " per side" : "Custom plate setup";
-  return plateStr + note;
+  let plateStr = breakdown.length > 0 ? breakdown.join(" + ") + " per side" : "Just the bar";
+  let barNotice = `<span class="text-secondary">(${barbell}kg Bar)</span>`;
+
+  if (needsFractional) {
+    return `🏋️ ${plateStr} on ${barNotice} = <b>${loadableWeight}kg</b> <small class="text-info">(+2x 2.5kg plates for ${targetWeight}kg)</small>`;
+  }
+
+  return `🏋️ ${plateStr} on ${barNotice} = <b>${loadableWeight}kg total</b>`;
 }
 
 function renderHistoryList() {
