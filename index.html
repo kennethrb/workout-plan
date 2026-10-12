@@ -10,7 +10,7 @@
 <body>
   <div class="app-container">
     <div class="brand-header">
-      <h2>💪 Xtreme Progressive Overload</h2>
+      <h2>🚀 Xtreme Progressive Overload</h2>
     </div>
     
     <div id="loading">
@@ -25,6 +25,16 @@
         <div id="balanceText" class="small text-light">Analyzing body proportions...</div>
       </div>
 
+      <!-- ⏱️ Rest Timer Widget (Initially Hidden) -->
+      <div id="restTimerWidget" class="card bg-dark border-info text-light mb-3 p-3 text-center" style="display: none;">
+        <h6 class="text-info mb-1">⏳ Rest Period Countdown</h6>
+        <div id="timerDisplay" class="display-6 fw-bold text-warning mb-2">1:30</div>
+        <div>
+          <button class="btn btn-sm btn-outline-info me-2" onclick="startRestTimer(90)">+ 90s</button>
+          <button class="btn btn-sm btn-outline-secondary" onclick="stopRestTimer()">Dismiss Timer</button>
+        </div>
+      </div>
+
       <!-- Log Form Card -->
       <div class="card shadow-sm mb-4">
         <h4 class="mb-4 fs-5 fw-bold text-white" id="formTitle">Log Exercise Set</h4>
@@ -33,7 +43,7 @@
           <!-- Coach Readiness & Auto Phase Section -->
           <div class="p-3 mb-3 rounded-3" style="background-color: rgba(59, 130, 246, 0.05); border: 1px dashed #334155;">
             <div class="d-flex justify-content-between align-items-center mb-2">
-              <h6 class="text-primary fw-bold mb-0">🧠 Coach Readiness & Phase</h6>
+              <h6 class="text-primary fw-bold mb-0">🤖 Coach Readiness & Phase</h6>
               <span class="badge bg-secondary text-light fw-normal" style="font-size: 0.75rem;">5 kg Plate Mode</span>
             </div>
             
