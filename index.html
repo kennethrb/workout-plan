@@ -135,7 +135,18 @@
       if (!last) {
         html += `<div class="text-warning mt-1">No prior logs found for this exercise. Start with your baseline target!</div>`;
       } else {
-        html += `<div class="mb-1"><b>Last Session (${last.date}):</b> ${last.weight} ${last.weightUnit === 'Bodyweight' ? '(BW)' : 'kg'}, ${last.sets} sets, Reps: [${last.reps}], RIR: ${last.rir}</div>`;
+        // Format the date nicely to local format
+        let formattedDate = last.date;
+        try {
+          let d = new Date(last.date);
+          if (!isNaN(d)) {
+            formattedDate = d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+          }
+        } catch (e) {
+          // fallback to raw string if parsing fails
+        }
+
+        html += `<div class="mb-1"><b>Last Session (${formattedDate}):</b> ${last.weight} ${last.weightUnit === 'Bodyweight' ? '(BW)' : 'kg'}, ${last.sets} sets, Reps: [${last.reps}], RIR: ${last.rir}</div>`;
         
         let suggestion = "";
         if (last.rir <= 2) {
