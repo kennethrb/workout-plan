@@ -110,7 +110,7 @@
       });
 
       select.addEventListener('change', updateProgressionAdvice);
-      updateProgressionAdvice(); // trigger initial load
+      updateProgressionAdvice();
     }
 
     function updateProgressionAdvice() {
@@ -128,7 +128,6 @@
         html += `<b>Last Session (${last.date}):</b> ${last.weight} ${last.weightUnit === 'Bodyweight' ? '(BW)' : 'kg'}, ${last.sets} sets, Reps: [${last.reps}], RIR: ${last.rir}<br>`;
         
         let suggestion = "";
-        
         if (last.rir <= 2) {
           suggestion = `🚀 <strong class="text-success">Recommendation: Ready to INCREASE WEIGHT!</strong> You hit target RIR with solid form. Bump up the weight by 1-2.5 kg next session.`;
         } else if (last.rir > 2) {
