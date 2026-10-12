@@ -281,9 +281,16 @@ function deleteLogEntry(rowIndex) {
 }
 
 function updateProgressionAdvice() {
-  const exercise = document.getElementById('exerciseSelect').value;
+  const exercise = document.getElementById('exerciseSelect').value.trim();
   const ref = globalData.references[exercise] || {};
-  const last = globalData.lastLogs[exercise] || null;
+  
+  // Primary check: lastLogs map
+  let last = globalData.lastLogs[exercise] || null;
+  
+  // Fallback check: If lastLogs missed it, search active history array
+  if (!last && globalData.history && globalData.history.length > 0) {
+    last = globalData.history.find(h => h.exercise && h.exercise.trim().toLowerCase() === exercise.toLowerCase());
+  }
   
   const sleep = document.getElementById('sleep').value;
   const stress = document.getElementById('stress').value;
@@ -297,7 +304,6 @@ function updateProgressionAdvice() {
   let targetWeight = roundToGymIncrement(ref.weightTarget || 0);
   let rationale = "";
 
-  // Check Auto-Balancing Condition
   const chickenLegActive = isChickenLegRiskActive();
   const isLower = isLowerBodyExercise(exercise);
 
@@ -305,12 +311,11 @@ function updateProgressionAdvice() {
     rationale = "No prior logs found. Starting with your baseline library target.";
     currentPrescription = { weight: targetWeight, sets: targetSets, reps: targetReps, rir: 1 };
   } else {
-    let cleanLastDate = formatDateString(last.date);
     targetWeight = roundToGymIncrement(last.weight);
     targetSets = last.sets;
     targetReps = last.reps;
 
-    // Prescriptive Coach Rules Locked to 5kg Plate Steps + Auto-Balancing Override
+    // Prescriptive Rules Engine
     if (phase.includes("Deload")) {
       targetWeight = Math.max(0, targetWeight - 5);
       targetSets = Math.max(2, last.sets - 1);
@@ -322,7 +327,6 @@ function updateProgressionAdvice() {
       targetWeight = roundToGymIncrement(last.weight); 
       rationale = `⚠️ <b>Fatigue Flag:</b> Holding weight steady at ${targetWeight}kg. Focus on clean form and execution.`;
     } else if (chickenLegActive && isLower && last.rir <= 2) {
-      // AUTO-BALANCING OVERRIDE: Forces a +5kg jump on lower body exercises even at RIR 2 to close the gap!
       targetWeight = roundToGymIncrement(last.weight + 5);
       rationale = `⚖️ <strong class="text-warning">Auto-Balancing Boost:</strong> Lagging lower body detected! Forcing a +5kg plate jump to <b>${targetWeight}kg</b>.`;
     } else if (last.rir <= 1) {
@@ -350,7 +354,6 @@ function applyPrescription() {
   document.getElementById('reps').value = currentPrescription.reps;
   document.getElementById('rir').value = currentPrescription.rir;
   
-  // Visual button feedback
   const btn = document.getElementById('applyPrescriptionBtn');
   btn.textContent = '✅ Applied!';
   setTimeout(() => { btn.textContent = '📥 Apply Prescription'; }, 1500);
@@ -415,28 +418,23 @@ function runCoachQATests() {
     }
   }
 
-  // TEST 1: 5kg Rounding Accuracy
   assert(roundToGymIncrement(52.3) === 50, "5kg Rounding (52.3kg -> 50kg)", 50, roundToGymIncrement(52.3));
   assert(roundToGymIncrement(52.8) === 55, "5kg Rounding (52.8kg -> 55kg)", 55, roundToGymIncrement(52.8));
   assert(roundToGymIncrement(4) === 5, "5kg Rounding Low Threshold (4kg -> 5kg)", 5, roundToGymIncrement(4));
   assert(roundToGymIncrement(0) === 0, "5kg Rounding Zero Handling (0kg -> 0kg)", 0, roundToGymIncrement(0));
 
-  // TEST 2: Progression Rule (RIR <= 1 -> +5kg Jump)
   let lastLogNormal = { weight: 50, sets: 3, reps: "10/10/10", rir: 1, date: "2026-10-01" };
   let targetNormal = roundToGymIncrement(lastLogNormal.weight + 5);
   assert(targetNormal === 55, "Progression Rule (+5kg Jump on RIR 1)", 55, targetNormal);
 
-  // TEST 3: Deload Phase Rule (-5kg Drop & Volume Cut)
   let deloadWeight = Math.max(0, lastLogNormal.weight - 5);
   let deloadSets = Math.max(2, lastLogNormal.sets - 1);
   assert(deloadWeight === 45, "Deload Weight Drop (-5kg)", 45, deloadWeight);
   assert(deloadSets === 2, "Deload Volume Reduction (3 sets -> 2 sets)", 2, deloadSets);
 
-  // TEST 4: Joint Tweak Safety Override
   let jointTweakWeight = Math.max(0, lastLogNormal.weight - 5);
   assert(jointTweakWeight === 45, "Joint Tweak Safety Drop (-5kg)", 45, jointTweakWeight);
 
-  // TEST 5: High Fatigue / Stress Rule (Hold Weight)
   let fatigueWeight = roundToGymIncrement(lastLogNormal.weight);
   assert(fatigueWeight === 50, "High Fatigue Weight Hold (Hold at 50kg)", 50, fatigueWeight);
 
