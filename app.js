@@ -24,13 +24,22 @@ function initApp() {
   document.getElementById('loading').style.display = 'none';
   document.getElementById('app-content').style.display = 'block';
 
+  // Automatically apply the backend's calculated training phase
+  const phaseSelect = document.getElementById('phase');
+  if (phaseSelect && globalData.currentPhase) {
+    phaseSelect.value = globalData.currentPhase;
+  }
+
+  if (globalData.cycleWeek) {
+    console.log(`Active Mesocycle: Week ${globalData.cycleWeek} (${globalData.currentPhase})`);
+  }
+
   document.getElementById('workoutDay').addEventListener('change', updateExerciseDropdown);
   document.getElementById('exerciseSelect').addEventListener('change', function() {
     updateProgressionAdvice();
     checkTimedExercise();
   });
 
-  // Listen to readiness changes to update coach advice dynamically
   ['sleep', 'stress', 'joints', 'phase'].forEach(id => {
     document.getElementById(id).addEventListener('change', updateProgressionAdvice);
   });
@@ -209,6 +218,12 @@ function editLogEntry(item) {
 function cancelEdit() {
   editingRowIndex = null;
   document.getElementById('workoutForm').reset();
+  
+  // Re-apply auto phase after resetting form
+  if (globalData.currentPhase) {
+    document.getElementById('phase').value = globalData.currentPhase;
+  }
+
   document.getElementById('formTitle').textContent = 'Log Exercise Set';
   document.getElementById('submitBtn').textContent = 'Log Set & Update Stats';
   document.getElementById('cancelEditBtn').style.display = 'none';
@@ -238,7 +253,6 @@ function updateProgressionAdvice() {
   const ref = globalData.references[exercise] || {};
   const last = globalData.lastLogs[exercise] || null;
   
-  // Get current readiness inputs
   const sleep = document.getElementById('sleep').value;
   const stress = document.getElementById('stress').value;
   const joints = document.getElementById('joints').value;
@@ -259,7 +273,6 @@ function updateProgressionAdvice() {
     let cleanLastDate = formatDateString(last.date);
     html += `<div class="mb-1">📊 <b>Last Session (${cleanLastDate}):</b> ${last.weight} ${last.weightUnit === 'Bodyweight' ? '(BW)' : 'kg'}, ${last.sets} sets, Reps/Sec: [${last.reps}], RIR: ${last.rir}</div>`;
     
-    // --- SMART COACH OVERLOAD ENGINE ---
     let suggestion = "";
     if (phase.includes("Deload")) {
       suggestion = `🛌 <strong class="text-info">Coach Notice (Deload Phase):</strong> Reduce working weight by 10-20% and focus strictly on movement recovery.`;
