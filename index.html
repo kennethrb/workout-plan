@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Xtreme Workout Tracker</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body { background-color: #121212; color: #e0e0e0; font-family: sans-serif; padding-bottom: 40px; }
+    .card { background-color: #1e1e1e; border: 1px solid #2d2d2d; color: #fff; }
+    .form-control, .form-select { background-color: #2b2b2b; color: #fff; border: 1px solid #444; }
+    .form-control:focus, .form-select:focus { background-color: #333; color: #fff; border-color: #0d6efd; box-shadow: none; }
+    .suggestion-box { background-color: #1f2937; border-left: 4px solid #3b82f6; padding: 12px; border-radius: 4px; margin-bottom: 20px; }
+  </style>
+</head>
+<body>
+  <div class="container mt-4">
+    <h2 class="text-center mb-4">💪 Xtreme Progressive Overload</h2>
+    
+    <div id="loading" class="text-center py-5">
+      <div class="spinner-border text-primary" role="status"></div>
+      <p class="mt-2">Loading workout data & benchmarks...</p>
+    </div>
+
+    <div id="app-content" style="display: none;">
+      <!-- Workout Form -->
+      <div class="card p-4 shadow-sm mb-4">
+        <h4 class="mb-3">Log Exercise Set</h4>
+        <form id="workoutForm">
+          <div class="mb-3">
+            <label class="form-label">Workout Day Type</label>
+            <select class="form-select" id="workoutDay" required>
+              <option value="Upper Hypertrophy">Upper Hypertrophy</option>
+              <option value="Lower Hypertrophy">Lower Hypertrophy</option>
+              <option value="Upper Strength">Upper Strength</option>
+              <option value="Lower Strength">Lower Strength</option>
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Exercise</label>
+            <select class="form-select" id="exerciseSelect" required></select>
+          </div>
+
+          <!-- Dynamic Suggestion Panel -->
+          <div class="suggestion-box" id="suggestionBox">
+            <h6 class="text-primary fw-bold mb-1">🤖 Progressive Overload Advisor</h6>
+            <p id="suggestionText" class="mb-0 small text-muted">Select an exercise to analyze past performance against your reference goals.</p>
+          </div>
+
+          <div class="row">
+            <div class="col-6 mb-3">
+              <label class="form-label">Weight Unit</label>
+              <select class="form-select" id="weightUnit">
+                <option value="Kilogram (kg)">Kilogram (kg)</option>
+                <option value="Bodyweight">Bodyweight</option>
+              </select>
+            </div>
+            <div class="col-6 mb-3">
+              <label class="form-label">Weight Used</label>
+              <input type="number" step="0.5" class="form-control" id="weight" required value="0">
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-6 mb-3">
+              <label class="form-label">Sets Completed</label>
+              <input type="number" class="form-control" id="sets" required value="3">
+            </div>
+            <div class="col-6 mb-3">
+              <label class="form-label">Reps per Set (e.g. 10/10/10)</label>
+              <input type="text" class="form-control" id="reps" required placeholder="10/10/10">
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">RIR (Reps in Reserve)</label>
+            <input type="number" class="form-control" id="rir" required value="1" min="0" max="5">
+          </div>
+
+          <button type="submit" class="btn btn-primary w-100 py-2 fw-bold" id="submitBtn">Log Set & Update Stats</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let globalData = {};
+
+    window.addEventListener('DOMContentLoaded', function() {
+      google.script.run.withSuccessHandler(function(data) {
+        globalData = data;
+        initApp();
+      }).getWorkoutData();
+    });
+
+    function initApp() {
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('app-content').style.display = 'block';
+
+      const select = document.getElementById('exerciseSelect');
+      select.innerHTML = '';
+      
+      globalData.exercises.forEach(ex => {
+        let opt = document.createElement('option');
+        opt.value = ex;
+        opt.textContent = ex;
+        select.appendChild(opt);
+      });
+
+      select.addEventListener('change', updateProgressionAdvice);
+      updateProgressionAdvice(); // trigger initial load
+    }
+
+    function updateProgressionAdvice() {
+      const exercise = document.getElementById('exerciseSelect').value;
+      const ref = globalData.references[exercise] || {};
+      const last = globalData.lastLogs[exercise] || null;
+      
+      const box = document.getElementById('suggestionText');
+      
+      let html = `<b>Benchmark Target:</b> ${ref.sets || '?'} sets × ${ref.repsTarget || '?'} reps @ RIR ${ref.rirTarget || '1-2'} (Target Wt: ${ref.weightTarget || 'N/A'})<br>`;
+      
+      if (!last) {
+        html += `<span class="text-warning">No prior logs found for this exercise. Start with your baseline target!</span>`;
+      } else {
+        html += `<b>Last Session (${last.date}):</b> ${last.weight} ${last.weightUnit === 'Bodyweight' ? '(BW)' : 'kg'}, ${last.sets} sets, Reps: [${last.reps}], RIR: ${last.rir}<br>`;
+        
+        // Progression Logic Engine
+        let targetRepsStr = String(ref.repsTarget || "");
+        let suggestion = "";
+        
+        // Check if hit or exceeded target reps and kept RIR <= target
+        if (last.rir <= 2) {
+          suggestion = `🚀 <strong class=\"text-success\">Recommendation: Ready to INCREASE WEIGHT!</strong> You hit target RIR with solid form. Bump up the weight by 1-2.5 kg next session.`;
+        } else if (last.rir > 2) {
+          suggestion = `📌 <strong class=\"text-warning\">Recommendation: Hold weight & Add Reps.</strong> RIR was high. Keep current weight and aim to lock in clean reps across all sets.`;
+        } else {
+          suggestion = `📈 <strong class=\"text-info\">Recommendation: Progress steadily.</strong> Keep matching your baseline.`;
+        }
+        html += `<div class=\"mt-2 text-info\">${suggestion}</div>`;
+      }
+      box.innerHTML = html;
+    }
+
+    document.getElementById('workoutForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const btn = document.getElementById('submitBtn');
+      btn.disabled = true;
+      btn.textContent = 'Saving to Sheet...';
+
+      const payload = {
+        workoutDay: document.getElementById('workoutDay').value,
+        exercise: document.getElementById('exerciseSelect').value,
+        weightUnit: document.getElementById('weightUnit').value,
+        weight: parseFloat(document.getElementById('weight').value) || 0,
+        sets: parseInt(document.getElementById('sets').value) || 0,
+        reps: document.getElementById('reps').value,
+        rir: parseInt(document.getElementById('rir').value) || 0
+      };
+
+      google.script.run.withSuccessHandler(function(res) {
+        alert(res.message);
+        google.script.run.withSuccessHandler(function(data) {
+          globalData = data;
+          updateProgressionAdvice();
+          btn.disabled = false;
+          btn.textContent = 'Log Set & Update Stats';
+        }).getWorkoutData();
+      }).submitWorkout(payload);
+    });
+  </script>
+</body>
+</html>
