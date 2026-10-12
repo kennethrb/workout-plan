@@ -2,7 +2,8 @@ const API_URL = "https://script.google.com/macros/s/AKfycbxZNsbt0S6EYYqbma4_nRMj
 
 let globalData = {};
 let editingRowIndex = null;
-let currentPrescription = null; // Stores target values for 1-click apply
+let currentPrescription = null; 
+let restTimerInterval = null;
 
 window.addEventListener('DOMContentLoaded', function() {
   fetchData();
@@ -25,7 +26,6 @@ function initApp() {
   document.getElementById('loading').style.display = 'none';
   document.getElementById('app-content').style.display = 'block';
 
-  // Apply backend calculated training phase
   const phaseInput = document.getElementById('phase');
   if (phaseInput && globalData.currentPhase) {
     phaseInput.value = globalData.currentPhase;
@@ -143,20 +143,17 @@ function formatDateString(dateStr) {
   }
 }
 
-// Helper: Snap all weights to 5kg gym plate increments
 function roundToGymIncrement(rawWeight) {
   if (!rawWeight || isNaN(rawWeight)) return 0;
   return Math.round(rawWeight / 5) * 5;
 }
 
-// Helper: Check if current exercise is a lower body movement
 function isLowerBodyExercise(exerciseName) {
   let nameLower = exerciseName.toLowerCase();
   return nameLower.includes('squat') || nameLower.includes('leg') || nameLower.includes('calf') || 
          nameLower.includes('deadlift') || nameLower.includes('hip') || nameLower.includes('thrust');
 }
 
-// Helper: Check if chicken leg imbalance risk is active
 function isChickenLegRiskActive() {
   const lastLogs = globalData.lastLogs || {};
   let upperWeights = [];
@@ -178,6 +175,28 @@ function isChickenLegRiskActive() {
   let avgLower = lowerWeights.length ? lowerWeights.reduce((a, b) => a + b, 0) / lowerWeights.length : 0;
 
   return (avgLower > 0 && avgUpper > 0 && avgLower < avgUpper * 1.1);
+}
+
+// ==========================================
+// 🔩 PLATE CALCULATOR LOGIC (Feature 2)
+// ==========================================
+function calculatePlates(targetWeight) {
+  let barbell = 20; // Standard Olympic Bar
+  if (targetWeight <= barbell) return "Just the bar (20kg)";
+  
+  let remainingPerSide = (targetWeight - barbell) / 2;
+  let availablePlates = [25, 20, 15, 10, 5]; // Gym plate sizes
+  let breakdown = [];
+
+  availablePlates.forEach(plate => {
+    let count = Math.floor(remainingPerSide / plate);
+    if (count > 0) {
+      breakdown.push(`${count}x ${plate}kg`);
+      remainingPerSide %= plate;
+    }
+  });
+
+  return breakdown.length > 0 ? breakdown.join(" + ") + " per side" : "Custom plate setup";
 }
 
 function renderHistoryList() {
@@ -224,13 +243,10 @@ function renderHistoryList() {
 
 function editLogEntry(item) {
   editingRowIndex = item.rowIndex;
-  
   document.getElementById('workoutDay').value = item.workoutDay;
   updateExerciseDropdown(); 
-  
   document.getElementById('exerciseSelect').value = item.exercise;
   checkTimedExercise();
-  
   document.getElementById('weightUnit').value = item.weightUnit;
   document.getElementById('weight').value = item.weight;
   document.getElementById('sets').value = item.sets;
@@ -244,18 +260,15 @@ function editLogEntry(item) {
   document.getElementById('formTitle').textContent = `Edit Log Entry (Row ${item.rowIndex})`;
   document.getElementById('submitBtn').textContent = 'Update Log Entry';
   document.getElementById('cancelEditBtn').style.display = 'inline-block';
-
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function cancelEdit() {
   editingRowIndex = null;
   document.getElementById('workoutForm').reset();
-  
   if (globalData.currentPhase) {
     document.getElementById('phase').value = globalData.currentPhase;
   }
-
   document.getElementById('formTitle').textContent = 'Log Exercise Set';
   document.getElementById('submitBtn').textContent = 'Log Set & Update Stats';
   document.getElementById('cancelEditBtn').style.display = 'none';
@@ -283,11 +296,8 @@ function deleteLogEntry(rowIndex) {
 function updateProgressionAdvice() {
   const exercise = document.getElementById('exerciseSelect').value.trim();
   const ref = globalData.references[exercise] || {};
-  
-  // Primary check: lastLogs map
   let last = globalData.lastLogs[exercise] || null;
   
-  // Fallback check: If lastLogs missed it, search active history array
   if (!last && globalData.history && globalData.history.length > 0) {
     last = globalData.history.find(h => h.exercise && h.exercise.trim().toLowerCase() === exercise.toLowerCase());
   }
@@ -315,7 +325,6 @@ function updateProgressionAdvice() {
     targetSets = last.sets;
     targetReps = last.reps;
 
-    // Prescriptive Rules Engine
     if (phase.includes("Deload")) {
       targetWeight = Math.max(0, targetWeight - 5);
       targetSets = Math.max(2, last.sets - 1);
@@ -339,14 +348,16 @@ function updateProgressionAdvice() {
     currentPrescription = { weight: targetWeight, sets: targetSets, reps: targetReps, rir: last.rir <= 1 ? 2 : last.rir };
   }
 
+  // Calculate plate breakdown for the prescription
+  let plateHint = currentPrescription.weight > 0 ? ` <br><small class="text-warning">🔩 Plates: ${calculatePlates(currentPrescription.weight)}</small>` : '';
+
   let html = `
-    <div class="mb-1 text-info">🎯 <b>Prescribed Target:</b> ${currentPrescription.weight} kg | ${currentPrescription.sets} sets | Reps: [${currentPrescription.reps}]</div>
+    <div class="mb-1 text-info">🎯 <b>Prescribed Target:</b> ${currentPrescription.weight} kg | ${currentPrescription.sets} sets | Reps: [${currentPrescription.reps}]${plateHint}</div>
     <div class="text-light mt-1">${rationale}</div>
   `;
   box.innerHTML = html;
 }
 
-// 1-Click apply prescription directly into form fields
 function applyPrescription() {
   if (!currentPrescription) return;
   document.getElementById('weight').value = currentPrescription.weight;
@@ -357,6 +368,42 @@ function applyPrescription() {
   const btn = document.getElementById('applyPrescriptionBtn');
   btn.textContent = '✅ Applied!';
   setTimeout(() => { btn.textContent = '📥 Apply Prescription'; }, 1500);
+}
+
+// ==========================================
+// ⏱️ REST TIMER LOGIC (Feature 3)
+// ==========================================
+function startRestTimer(seconds) {
+  clearInterval(restTimerInterval);
+  const display = document.getElementById('timerDisplay');
+  const widget = document.getElementById('restTimerWidget');
+  widget.style.display = 'block';
+  
+  let remaining = seconds;
+  
+  function updateDisplay() {
+    let m = Math.floor(remaining / 60);
+    let s = remaining % 60;
+    display.textContent = `${m}:${s < 10 ? '0' : ''}${s}`;
+  }
+  
+  updateDisplay();
+  
+  restTimerInterval = setInterval(() => {
+    remaining--;
+    if (remaining < 0) {
+      clearInterval(restTimerInterval);
+      display.textContent = "Time to lift! 🔥";
+      // Optional audio beep could go here
+    } else {
+      updateDisplay();
+    }
+  }, 1000);
+}
+
+function stopRestTimer() {
+  clearInterval(restTimerInterval);
+  document.getElementById('restTimerWidget').style.display = 'none';
 }
 
 document.getElementById('workoutForm').addEventListener('submit', function(e) {
@@ -391,6 +438,9 @@ document.getElementById('workoutForm').addEventListener('submit', function(e) {
     cancelEdit(); 
     fetchData();  
     btn.disabled = false;
+    
+    // TRIGGER REST TIMER UPON SUCCESSFUL SET LOG (90 seconds rest)
+    startRestTimer(90);
   })
   .catch(err => {
     alert("Error saving workout: " + err);
@@ -398,46 +448,3 @@ document.getElementById('workoutForm').addEventListener('submit', function(e) {
     btn.textContent = editingRowIndex ? 'Update Log Entry' : 'Log Set & Update Stats';
   });
 });
-
-// ==========================================
-// 🧪 QA CONSOLE TEST SUITE FOR COACH ENGINE
-// ==========================================
-function runCoachQATests() {
-  console.group("🚀 RUNNING AUTOMATED QA TESTS FOR COACH ENGINE...");
-
-  let testsPassed = 0;
-  let totalTests = 0;
-
-  function assert(condition, testName, expected, actual) {
-    totalTests++;
-    if (condition) {
-      console.log(`%c✅ PASS: ${testName}`, "color: #10b981; font-weight: bold;");
-      testsPassed++;
-    } else {
-      console.error(`❌ FAIL: ${testName}\n   Expected: ${expected}\n   Actual:   ${actual}`);
-    }
-  }
-
-  assert(roundToGymIncrement(52.3) === 50, "5kg Rounding (52.3kg -> 50kg)", 50, roundToGymIncrement(52.3));
-  assert(roundToGymIncrement(52.8) === 55, "5kg Rounding (52.8kg -> 55kg)", 55, roundToGymIncrement(52.8));
-  assert(roundToGymIncrement(4) === 5, "5kg Rounding Low Threshold (4kg -> 5kg)", 5, roundToGymIncrement(4));
-  assert(roundToGymIncrement(0) === 0, "5kg Rounding Zero Handling (0kg -> 0kg)", 0, roundToGymIncrement(0));
-
-  let lastLogNormal = { weight: 50, sets: 3, reps: "10/10/10", rir: 1, date: "2026-10-01" };
-  let targetNormal = roundToGymIncrement(lastLogNormal.weight + 5);
-  assert(targetNormal === 55, "Progression Rule (+5kg Jump on RIR 1)", 55, targetNormal);
-
-  let deloadWeight = Math.max(0, lastLogNormal.weight - 5);
-  let deloadSets = Math.max(2, lastLogNormal.sets - 1);
-  assert(deloadWeight === 45, "Deload Weight Drop (-5kg)", 45, deloadWeight);
-  assert(deloadSets === 2, "Deload Volume Reduction (3 sets -> 2 sets)", 2, deloadSets);
-
-  let jointTweakWeight = Math.max(0, lastLogNormal.weight - 5);
-  assert(jointTweakWeight === 45, "Joint Tweak Safety Drop (-5kg)", 45, jointTweakWeight);
-
-  let fatigueWeight = roundToGymIncrement(lastLogNormal.weight);
-  assert(fatigueWeight === 50, "High Fatigue Weight Hold (Hold at 50kg)", 50, fatigueWeight);
-
-  console.log(`\n📊 TEST RESULTS: ${testsPassed} / ${totalTests} Passed.`);
-  console.groupEnd();
-}
