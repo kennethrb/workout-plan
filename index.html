@@ -11,6 +11,7 @@
     .form-control, .form-select { background-color: #2b2b2b; color: #fff; border: 1px solid #444; }
     .form-control:focus, .form-select:focus { background-color: #333; color: #fff; border-color: #0d6efd; box-shadow: none; }
     .suggestion-box { background-color: #1f2937; border-left: 4px solid #3b82f6; padding: 12px; border-radius: 4px; margin-bottom: 20px; color: #f3f4f6; }
+    .balance-box { background-color: #111827; border-left: 4px solid #10b981; padding: 12px; border-radius: 4px; margin-bottom: 20px; color: #f3f4f6; }
   </style>
 </head>
 <body>
@@ -23,16 +24,22 @@
     </div>
 
     <div id="app-content" style="display: none;">
+      <!-- Physique Balance Advisor -->
+      <div class="balance-box" id="balanceBox">
+        <h6 class="text-success fw-bold mb-1">⚖️ Upper/Lower Balance Advisor</h6>
+        <div id="balanceText" class="small text-light">Analyzing body proportion balance...</div>
+      </div>
+
       <div class="card p-4 shadow-sm mb-4">
         <h4 class="mb-3">Log Exercise Set</h4>
         <form id="workoutForm">
           <div class="mb-3">
             <label class="form-label">Workout Day Type</label>
             <select class="form-select" id="workoutDay" required>
-              <option value="Upper Hypertrophy">Upper Hypertrophy</option>
-              <option value="Lower Hypertrophy">Lower Hypertrophy</option>
               <option value="Upper Strength">Upper Strength</option>
               <option value="Lower Strength">Lower Strength</option>
+              <option value="Upper Hypertrophy">Upper Hypertrophy</option>
+              <option value="Lower Hypertrophy">Lower Hypertrophy</option>
             </select>
           </div>
 
@@ -108,7 +115,6 @@
       document.getElementById('loading').style.display = 'none';
       document.getElementById('app-content').style.display = 'block';
 
-      // Event listeners
       document.getElementById('workoutDay').addEventListener('change', updateExerciseDropdown);
       document.getElementById('exerciseSelect').addEventListener('change', function() {
         updateProgressionAdvice();
@@ -116,21 +122,20 @@
       });
 
       updateExerciseDropdown();
+      evaluatePhysiqueBalance();
     }
 
-    // Automatically change exercise dropdown based on workout type
     function updateExerciseDropdown() {
       const workoutDay = document.getElementById('workoutDay').value;
       const select = document.getElementById('exerciseSelect');
       select.innerHTML = '';
 
-      // Get exercises mapped to this workout day from history, or fallback to all exercises
       let exercisesForDay = (globalData.workoutMap && globalData.workoutMap[workoutDay]) 
                             ? globalData.workoutMap[workoutDay] 
                             : globalData.exercises;
 
       if (!exercisesForDay || exercisesForDay.length === 0) {
-        exercisesForDay = globalData.exercises; // ultimate fallback
+        exercisesForDay = globalData.exercises;
       }
 
       exercisesForDay.forEach(ex => {
@@ -144,7 +149,6 @@
       checkTimedExercise();
     }
 
-    // Detect if exercise is timed (e.g. Plank) vs Rep-based
     function checkTimedExercise() {
       const exercise = document.getElementById('exerciseSelect').value.toLowerCase();
       const repsLabel = document.getElementById('repsLabel');
@@ -157,6 +161,46 @@
         repsLabel.textContent = "Reps per Set (e.g. 10/10/10)";
         repsInput.placeholder = "10/10/10";
       }
+    }
+
+    // JavaScript Logic to check Upper vs Lower balance and prevent "chicken legs"
+    function evaluatePhysiqueBalance() {
+      const lastLogs = globalData.lastLogs || {};
+      let upperWeights = [];
+      let lowerWeights = [];
+
+      Object.keys(lastLogs).forEach(ex => {
+        let nameLower = ex.toLowerCase();
+        let wt = lastLogs[ex].weight || 0;
+        if (wt > 0 && lastLogs[ex].weightUnit !== 'Bodyweight') {
+          // Categorize based on exercise keywords
+          if (nameLower.includes('squat') || nameLower.includes('leg') || nameLower.includes('calf') || nameLower.includes('deadlift') || nameLower.includes('hip') || nameLower.includes('thrust')) {
+            lowerWeights.push(wt);
+          } else if (nameLower.includes('bench') || nameLower.includes('press') || nameLower.includes('row') || nameLower.includes('pull') || nameLower.includes('curl') || nameLower.includes('extension')) {
+            upperWeights.push(wt);
+          }
+        }
+      });
+
+      let avgUpper = upperWeights.length ? upperWeights.reduce((a, b) => a + b, 0) / upperWeights.length : 0;
+      let avgLower = lowerWeights.length ? lowerWeights.reduce((a, b) => a + b, 0) / lowerWeights.length : 0;
+
+      const balanceText = document.getElementById('balanceText');
+      if (avgUpper === 0 && avgLower === 0) {
+        balanceText.innerHTML = "Log some weighted upper and lower exercises to generate your symmetry profile!";
+        return;
+      }
+
+      let analysis = `<b>Average Working Weights:</b> Upper (~${avgUpper.toFixed(1)} kg) vs Lower (~${avgLower.toFixed(1)} kg)<br>`;
+      
+      // Proportional ratio heuristic (Lower body compound movements like squats/deadlifts should generally outpace upper body pressing/pulling)
+      if (avgLower > 0 && avgUpper > 0 && avgLower < avgUpper * 1.1) {
+        analysis += `⚠️ <strong class="text-warning">Warning: Chicken leg risk detected!</strong> Your upper body loading is close to or exceeding your lower body. Prioritize intensity on your <b>Lower Strength</b> days to build balanced proportions.`;
+      } else {
+        analysis += `✅ <strong class="text-success">Great job!</strong> Your upper and lower body proportions are maintaining a solid strength balance. Keep pushing both!`;
+      }
+
+      balanceText.innerHTML = analysis;
     }
 
     function updateProgressionAdvice() {
