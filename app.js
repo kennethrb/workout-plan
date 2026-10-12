@@ -1,7 +1,7 @@
 const API_URL = "https://script.google.com/macros/s/AKfycbxZNsbt0S6EYYqbma4_nRMjNJFt4d-84qt1noBVy97ol2wuuiVZzs8xBSJEn4TRlekj/exec";
 
 let globalData = {};
-let editingRowIndex = null; // null means new log; number means editing existing row
+let editingRowIndex = null;
 
 window.addEventListener('DOMContentLoaded', function() {
   fetchData();
@@ -133,6 +133,7 @@ function renderHistoryList() {
 
   let html = '<div class="list-group list-group-flush bg-transparent">';
   visibleItems.forEach(item => {
+    // item.date is used directly as a raw string to maintain exact Sheet format
     html += `
       <div class="list-group-item bg-transparent text-light border-secondary d-flex justify-content-between align-items-center py-2 px-0">
         <div class="small text-truncate me-2">
@@ -170,7 +171,7 @@ function editLogEntry(item) {
   document.getElementById('reps').value = item.reps;
   document.getElementById('rir').value = item.rir;
 
-  // Change button text and show cancel button
+  document.getElementById('formTitle').textContent = `Edit Log Entry (Row ${item.rowIndex})`;
   document.getElementById('submitBtn').textContent = 'Update Log Entry';
   document.getElementById('cancelEditBtn').style.display = 'inline-block';
 
@@ -180,6 +181,7 @@ function editLogEntry(item) {
 function cancelEdit() {
   editingRowIndex = null;
   document.getElementById('workoutForm').reset();
+  document.getElementById('formTitle').textContent = 'Log Exercise Set';
   document.getElementById('submitBtn').textContent = 'Log Set & Update Stats';
   document.getElementById('cancelEditBtn').style.display = 'none';
   updateExerciseDropdown();
@@ -223,6 +225,7 @@ function updateProgressionAdvice() {
   if (!last) {
     html += `<div class="text-warning mt-1">No prior logs found. Start with your baseline target!</div>`;
   } else {
+    // last.date is used directly as a raw string to display exact Sheet formatting
     html += `<div class="mb-1">📊 <b>Last Session (${last.date}):</b> ${last.weight} ${last.weightUnit === 'Bodyweight' ? '(BW)' : 'kg'}, ${last.sets} sets, Reps/Sec: [${last.reps}], RIR: ${last.rir}</div>`;
     
     let suggestion = "";
@@ -263,8 +266,8 @@ document.getElementById('workoutForm').addEventListener('submit', function(e) {
   .then(res => res.json())
   .then(res => {
     alert(res.message);
-    cancelEdit(); // Clears form, resets button, hides cancel button, and resets editing index
-    fetchData();  // Reloads fresh data
+    cancelEdit(); 
+    fetchData();  
     btn.disabled = false;
   })
   .catch(err => {
