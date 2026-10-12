@@ -149,6 +149,37 @@ function roundToGymIncrement(rawWeight) {
   return Math.round(rawWeight / 5) * 5;
 }
 
+// Helper: Check if current exercise is a lower body movement
+function isLowerBodyExercise(exerciseName) {
+  let nameLower = exerciseName.toLowerCase();
+  return nameLower.includes('squat') || nameLower.includes('leg') || nameLower.includes('calf') || 
+         nameLower.includes('deadlift') || nameLower.includes('hip') || nameLower.includes('thrust');
+}
+
+// Helper: Check if chicken leg imbalance risk is active
+function isChickenLegRiskActive() {
+  const lastLogs = globalData.lastLogs || {};
+  let upperWeights = [];
+  let lowerWeights = [];
+
+  Object.keys(lastLogs).forEach(ex => {
+    let nameLower = ex.toLowerCase();
+    let wt = lastLogs[ex].weight || 0;
+    if (wt > 0 && lastLogs[ex].weightUnit !== 'Bodyweight') {
+      if (isLowerBodyExercise(ex)) {
+        lowerWeights.push(wt);
+      } else {
+        upperWeights.push(wt);
+      }
+    }
+  });
+
+  let avgUpper = upperWeights.length ? upperWeights.reduce((a, b) => a + b, 0) / upperWeights.length : 0;
+  let avgLower = lowerWeights.length ? lowerWeights.reduce((a, b) => a + b, 0) / lowerWeights.length : 0;
+
+  return (avgLower > 0 && avgUpper > 0 && avgLower < avgUpper * 1.1);
+}
+
 function renderHistoryList() {
   const container = document.getElementById('historyContainer');
   const searchQuery = document.getElementById('historySearch').value.toLowerCase();
@@ -266,6 +297,10 @@ function updateProgressionAdvice() {
   let targetWeight = roundToGymIncrement(ref.weightTarget || 0);
   let rationale = "";
 
+  // Check Auto-Balancing Condition
+  const chickenLegActive = isChickenLegRiskActive();
+  const isLower = isLowerBodyExercise(exercise);
+
   if (!last) {
     rationale = "No prior logs found. Starting with your baseline library target.";
     currentPrescription = { weight: targetWeight, sets: targetSets, reps: targetReps, rir: 1 };
@@ -275,7 +310,7 @@ function updateProgressionAdvice() {
     targetSets = last.sets;
     targetReps = last.reps;
 
-    // Prescriptive Coach Rules Locked to 5kg Plate Steps
+    // Prescriptive Coach Rules Locked to 5kg Plate Steps + Auto-Balancing Override
     if (phase.includes("Deload")) {
       targetWeight = Math.max(0, targetWeight - 5);
       targetSets = Math.max(2, last.sets - 1);
@@ -286,6 +321,10 @@ function updateProgressionAdvice() {
     } else if (sleep === "Poor" || stress === "High") {
       targetWeight = roundToGymIncrement(last.weight); 
       rationale = `⚠️ <b>Fatigue Flag:</b> Holding weight steady at ${targetWeight}kg. Focus on clean form and execution.`;
+    } else if (chickenLegActive && isLower && last.rir <= 2) {
+      // AUTO-BALANCING OVERRIDE: Forces a +5kg jump on lower body exercises even at RIR 2 to close the gap!
+      targetWeight = roundToGymIncrement(last.weight + 5);
+      rationale = `⚖️ <strong class="text-warning">Auto-Balancing Boost:</strong> Lagging lower body detected! Forcing a +5kg plate jump to <b>${targetWeight}kg</b>.`;
     } else if (last.rir <= 1) {
       targetWeight = roundToGymIncrement(last.weight + 5); 
       rationale = `🚀 <strong class="text-success">5kg Plate Jump:</strong> Crushed last session! Stepping up to <b>${targetWeight}kg</b> (your gym's 5kg plate step).`;
@@ -384,9 +423,6 @@ function runCoachQATests() {
 
   // TEST 2: Progression Rule (RIR <= 1 -> +5kg Jump)
   let lastLogNormal = { weight: 50, sets: 3, reps: "10/10/10", rir: 1, date: "2026-10-01" };
-  let refNormal = { sets: 3, repsTarget: "10/10/10", rirTarget: "1-2", weightTarget: 50 };
-  
-  // Simulate Normal Accumulation Phase Calculation
   let targetNormal = roundToGymIncrement(lastLogNormal.weight + 5);
   assert(targetNormal === 55, "Progression Rule (+5kg Jump on RIR 1)", 55, targetNormal);
 
