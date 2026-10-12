@@ -30,9 +30,13 @@
         <h4 class="mb-4 fs-5 fw-bold text-white" id="formTitle">Log Exercise Set</h4>
         <form id="workoutForm">
           
-          <!-- Coach Readiness Section -->
+          <!-- Coach Readiness & Auto Phase Section -->
           <div class="p-3 mb-3 rounded-3" style="background-color: rgba(59, 130, 246, 0.05); border: 1px dashed #334155;">
-            <h6 class="text-primary fw-bold mb-2">🧠 Coach Readiness & Phase Check</h6>
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <h6 class="text-primary fw-bold mb-0">🧠 Coach Readiness & Phase</h6>
+              <span class="badge bg-secondary text-light fw-normal" style="font-size: 0.75rem;">5 kg Plate Mode</span>
+            </div>
+            
             <div class="row">
               <div class="col-6 mb-2">
                 <label class="form-label">Sleep Quality</label>
@@ -60,12 +64,8 @@
                 </select>
               </div>
               <div class="col-6 mb-1">
-                <label class="form-label">Training Phase</label>
-                <select class="form-select form-select-sm" id="phase">
-                  <option value="Accumulation (Volume)" selected>Accumulation (Volume)</option>
-                  <option value="Intensification (Peak)">Intensification (Peak)</option>
-                  <option value="Deload (Recovery)">Deload (Recovery)</option>
-                </select>
+                <label class="form-label">Training Phase (Auto)</label>
+                <input type="text" class="form-control form-control-sm bg-dark text-info" id="phase" readonly value="Accumulation (Volume)">
               </div>
             </div>
           </div>
@@ -85,9 +85,13 @@
             <select class="form-select" id="exerciseSelect" required></select>
           </div>
 
-          <div class="advisor-box">
-            <h6 class="text-primary fw-bold mb-1">🤖 Overload Coach Advisor</h6>
-            <div id="suggestionText" class="mt-2 text-light small">Select an exercise to analyze past performance.</div>
+          <!-- Prescriptive Coach Advisor Box -->
+          <div class="advisor-box mb-3">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <h6 class="text-primary fw-bold mb-0">🤖 Prescriptive Coach Advisor</h6>
+              <button type="button" class="btn btn-sm btn-outline-success py-0 px-2" id="applyPrescriptionBtn" style="font-size: 0.75rem;" onclick="applyPrescription()">📥 Apply Prescription</button>
+            </div>
+            <div id="suggestionText" class="mt-2 text-light small">Select an exercise to generate exact prescription targets.</div>
           </div>
 
           <div class="row">
