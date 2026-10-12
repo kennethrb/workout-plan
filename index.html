@@ -10,7 +10,7 @@
     .card { background-color: #1e1e1e; border: 1px solid #2d2d2d; color: #fff; }
     .form-control, .form-select { background-color: #2b2b2b; color: #fff; border: 1px solid #444; }
     .form-control:focus, .form-select:focus { background-color: #333; color: #fff; border-color: #0d6efd; box-shadow: none; }
-    .suggestion-box { background-color: #1f2937; border-left: 4px solid #3b82f6; padding: 12px; border-radius: 4px; margin-bottom: 20px; }
+    .suggestion-box { background-color: #1f2937; border-left: 4px solid #3b82f6; padding: 12px; border-radius: 4px; margin-bottom: 20px; color: #f3f4f6; }
   </style>
 </head>
 <body>
@@ -43,7 +43,7 @@
 
           <div class="suggestion-box" id="suggestionBox">
             <h6 class="text-primary fw-bold mb-1">🤖 Progressive Overload Advisor</h6>
-            <p id="suggestionText" class="mb-0 small text-muted">Select an exercise to analyze past performance against your reference goals.</p>
+            <div id="suggestionText" class="mt-2 text-light small">Select an exercise to analyze past performance against your reference goals.</div>
           </div>
 
           <div class="row">
@@ -83,7 +83,6 @@
   </div>
 
   <script>
-    // PASTE YOUR DEPLOYED GOOGLE APPS SCRIPT WEB APP URL HERE:
     const API_URL = "https://script.google.com/macros/s/AKfycbxZNsbt0S6EYYqbma4_nRMjNJFt4d-84qt1noBVy97ol2wuuiVZzs8xBSJEn4TRlekj/exec";
     
     let globalData = {};
@@ -131,12 +130,12 @@
       
       const box = document.getElementById('suggestionText');
       
-      let html = `<b>Benchmark Target:</b> ${ref.sets || '?'} sets × ${ref.repsTarget || '?'} reps @ RIR ${ref.rirTarget || '1-2'} (Target Wt: ${ref.weightTarget || 'N/A'})<br>`;
+      let html = `<div class="mb-1"><b>Benchmark Target:</b> ${ref.sets || '?'} sets × ${ref.repsTarget || '?'} reps @ RIR ${ref.rirTarget || '1-2'} (Target Wt: ${ref.weightTarget || 'N/A'})</div>`;
       
       if (!last) {
-        html += `<span class="text-warning">No prior logs found for this exercise. Start with your baseline target!</span>`;
+        html += `<div class="text-warning mt-1">No prior logs found for this exercise. Start with your baseline target!</div>`;
       } else {
-        html += `<b>Last Session (${last.date}):</b> ${last.weight} ${last.weightUnit === 'Bodyweight' ? '(BW)' : 'kg'}, ${last.sets} sets, Reps: [${last.reps}], RIR: ${last.rir}<br>`;
+        html += `<div class="mb-1"><b>Last Session (${last.date}):</b> ${last.weight} ${last.weightUnit === 'Bodyweight' ? '(BW)' : 'kg'}, ${last.sets} sets, Reps: [${last.reps}], RIR: ${last.rir}</div>`;
         
         let suggestion = "";
         if (last.rir <= 2) {
@@ -146,7 +145,7 @@
         } else {
           suggestion = `📈 <strong class="text-info">Recommendation: Progress steadily.</strong> Keep matching your baseline.`;
         }
-        html += `<div class="mt-2 text-info">${suggestion}</div>`;
+        html += `<div class="mt-2 text-light">${suggestion}</div>`;
       }
       box.innerHTML = html;
     }
@@ -174,7 +173,7 @@
       .then(res => res.json())
       .then(res => {
         alert(res.message);
-        fetchData(); // reload fresh data
+        fetchData();
         btn.disabled = false;
         btn.textContent = 'Log Set & Update Stats';
       })
