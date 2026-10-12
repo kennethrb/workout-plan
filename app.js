@@ -5,6 +5,7 @@ let editingRowIndex = null;
 let currentPrescription = null; 
 let restTimerInterval = null;
 let myProgressChart = null;
+let pendingDeleteRowIndex = null;
 
 window.addEventListener('DOMContentLoaded', function() {
   fetchData();
@@ -48,6 +49,14 @@ function initApp() {
   evaluatePhysiqueBalance();
   renderHistoryList();
   initChartDropdown();
+}
+
+function showToast(message) {
+  const toastEl = document.getElementById('successToast');
+  const toastMsg = document.getElementById('toastMessage');
+  toastMsg.textContent = message;
+  const toast = new bootstrap.Toast(toastEl, { delay: 3000 });
+  toast.show();
 }
 
 function updateExerciseDropdown() {
@@ -180,7 +189,7 @@ function isChickenLegRiskActive() {
 }
 
 // ==========================================
-// 🔩 PLATE CALCULATOR LOGIC (Feature 2)
+// 🔩 PLATE CALCULATOR LOGIC
 // ==========================================
 function calculatePlates(targetWeight) {
   const barSelect = document.getElementById('barbellType');
@@ -218,7 +227,7 @@ function calculatePlates(targetWeight) {
 }
 
 // ==========================================
-// 📈 CHART VISUAL TREND ENGINE (Feature 1)
+// 📈 CHART VISUAL TREND ENGINE
 // ==========================================
 function initChartDropdown() {
   const select = document.getElementById('chartExerciseSelect');
@@ -387,7 +396,32 @@ function cancelEdit() {
 }
 
 function deleteLogEntry(rowIndex) {
-  if (!confirm("Are you sure you want to delete this log entry?")) return;
+  pendingDeleteRowIndex = rowIndex;
+  const history = globalData.history || [];
+  const item = history.find(h => h.rowIndex === rowIndex);
+  const exerciseName = item ? item.exercise : `Row ${rowIndex}`;
+
+  const container = document.getElementById('historyContainer');
+  const confirmationHtml = `
+    <div id="deleteConfirmBanner" class="alert alert-danger bg-dark border-danger text-light py-2 px-3 mb-3 small d-flex justify-content-between align-items-center">
+      <span>🗑️ Delete entry for <b>${exerciseName}</b>?</span>
+      <div>
+        <button class="btn btn-sm btn-danger py-0 px-2 me-1" onclick="confirmDelete()">Yes, Delete</button>
+        <button class="btn btn-sm btn-outline-secondary py-0 px-2" onclick="cancelDeletePrompt()">Cancel</button>
+      </div>
+    </div>
+  `;
+  
+  let existingBanner = document.getElementById('deleteConfirmBanner');
+  if (existingBanner) existingBanner.remove();
+  
+  container.insertAdjacentHTML('beforebegin', confirmationHtml);
+}
+
+function confirmDelete() {
+  if (pendingDeleteRowIndex === null) return;
+  const rowIndex = pendingDeleteRowIndex;
+  cancelDeletePrompt();
 
   fetch(API_URL, {
     method: 'POST',
@@ -395,13 +429,19 @@ function deleteLogEntry(rowIndex) {
   })
   .then(res => res.json())
   .then(res => {
-    alert(res.message);
+    showToast(res.message || "Entry deleted successfully!");
     if (editingRowIndex === rowIndex) cancelEdit();
     fetchData();
   })
   .catch(err => {
-    alert("Error deleting entry: " + err);
+    showToast("Error deleting entry: " + err);
   });
+}
+
+function cancelDeletePrompt() {
+  pendingDeleteRowIndex = null;
+  let banner = document.getElementById('deleteConfirmBanner');
+  if (banner) banner.remove();
 }
 
 function updateProgressionAdvice() {
@@ -481,7 +521,7 @@ function applyPrescription() {
 }
 
 // ==========================================
-// ⏱️ REST TIMER LOGIC (Feature 3)
+// ⏱️ REST TIMER LOGIC
 // ==========================================
 function startRestTimer(seconds) {
   clearInterval(restTimerInterval);
@@ -543,14 +583,14 @@ document.getElementById('workoutForm').addEventListener('submit', function(e) {
   })
   .then(res => res.json())
   .then(res => {
-    alert(res.message);
+    showToast(res.message || "Workout saved successfully!");
     cancelEdit(); 
     fetchData();  
     btn.disabled = false;
     startRestTimer(90);
   })
   .catch(err => {
-    alert("Error saving workout: " + err);
+    showToast("Error saving workout: " + err);
     btn.disabled = false;
     btn.textContent = editingRowIndex ? 'Update Log Entry' : 'Log Set & Update Stats';
   });
