@@ -4,9 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Xtreme Workout Tracker</title>
-  <!-- Bootstrap 5 CSS for utility classes -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <!-- Custom Professional Stylesheet -->
   <link href="styles.css" rel="stylesheet">
 </head>
 <body>
@@ -27,8 +25,9 @@
         <div id="balanceText" class="small text-light">Analyzing body proportions...</div>
       </div>
 
-      <div class="card shadow-sm">
-        <h4 class="mb-3 fs-5">Log Exercise Set</h4>
+      <!-- Log Form Card -->
+      <div class="card shadow-sm mb-4">
+        <h4 class="mb-3 fs-5" id="formTitle">Log Exercise Set</h4>
         <form id="workoutForm">
           <div class="mb-3">
             <label class="form-label">Workout Day Type</label>
@@ -45,7 +44,6 @@
             <select class="form-select" id="exerciseSelect" required></select>
           </div>
 
-          <!-- Progressive Overload Advisor -->
           <div class="advisor-box">
             <h6 class="text-primary fw-bold mb-1">🤖 Overload Advisor</h6>
             <div id="suggestionText" class="mt-2 text-light small">Select an exercise to analyze past performance.</div>
@@ -81,13 +79,26 @@
             <input type="number" class="form-control" id="rir" required value="1" min="0" max="5">
           </div>
 
-          <button type="submit" class="btn btn-primary w-100 fw-bold" id="submitBtn">Log Set & Update Stats</button>
+          <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary flex-grow-1 fw-bold" id="submitBtn">Log Set & Update Stats</button>
+            <button type="button" class="btn btn-outline-secondary fw-bold" id="cancelEditBtn" style="display: none;" onclick="cancelEdit()">Cancel</button>
+          </div>
         </form>
+      </div>
+
+      <!-- History Search & Management Card -->
+      <div class="card shadow-sm">
+        <h4 class="mb-3 fs-5">Workout History & Management</h4>
+        <div class="mb-3">
+          <input type="text" class="form-control" id="historySearch" placeholder="🔍 Search by exercise, day, or date...">
+        </div>
+        <div id="historyContainer">
+          <p class="text-muted small mb-0">Loading history...</p>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- Custom App Logic Script -->
-  <script src="app.js"></script>
+  <script src="app.js" defer></script>
 </body>
 </html>
