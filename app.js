@@ -347,7 +347,6 @@ function renderHistoryList() {
   visibleItems.forEach(item => {
     let cleanDate = formatDateString(item.date);
     let coachBadge = item.sleep ? `<br><small class="text-info">Sleep: ${item.sleep} | Stress: ${item.stress} | Phase: ${item.phase}</small>` : '';
-    // Strip leading single quote for display if present
     let cleanReps = (item.reps || "").toString().replace(/^'/, '');
     html += `
       <div class="list-group-item bg-transparent text-light border-secondary d-flex justify-content-between align-items-center py-2 px-0">
@@ -576,7 +575,6 @@ document.getElementById('workoutForm').addEventListener('submit', function(e) {
     weightUnit: document.getElementById('weightUnit').value,
     weight: parseFloat(document.getElementById('weight').value) || 0,
     sets: parseInt(document.getElementById('sets').value) || 0,
-    // Fix: Prepend apostrophe to force Google Sheets plain-text formatting (prevents date auto-format like 6/6/2006)
     reps: "'" + document.getElementById('reps').value.trim(),
     rir: parseInt(document.getElementById('rir').value) || 0,
     sleep: document.getElementById('sleep').value,
@@ -595,7 +593,10 @@ document.getElementById('workoutForm').addEventListener('submit', function(e) {
     cancelEdit(); 
     fetchData();  
     btn.disabled = false;
+    
+    // Trigger rest timer and smoothly scroll back up to the top view
     startRestTimer(90);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   })
   .catch(err => {
     showToast("Error saving workout: " + err);
