@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <base target="_top">
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Xtreme Workout Tracker</title>
@@ -24,7 +23,6 @@
     </div>
 
     <div id="app-content" style="display: none;">
-      <!-- Workout Form -->
       <div class="card p-4 shadow-sm mb-4">
         <h4 class="mb-3">Log Exercise Set</h4>
         <form id="workoutForm">
@@ -43,7 +41,6 @@
             <select class="form-select" id="exerciseSelect" required></select>
           </div>
 
-          <!-- Dynamic Suggestion Panel -->
           <div class="suggestion-box" id="suggestionBox">
             <h6 class="text-primary fw-bold mb-1">🤖 Progressive Overload Advisor</h6>
             <p id="suggestionText" class="mb-0 small text-muted">Select an exercise to analyze past performance against your reference goals.</p>
@@ -86,14 +83,27 @@
   </div>
 
   <script>
+    // PASTE YOUR DEPLOYED GOOGLE APPS SCRIPT WEB APP URL HERE:
+    const API_URL = "YOUR_APPS_SCRIPT_WEB_APP_URL_HERE";
+    
     let globalData = {};
 
     window.addEventListener('DOMContentLoaded', function() {
-      google.script.run.withSuccessHandler(function(data) {
-        globalData = data;
-        initApp();
-      }).getWorkoutData();
+      fetchData();
     });
+
+    function fetchData() {
+      fetch(API_URL)
+        .then(res => res.json())
+        .then(data => {
+          globalData = data;
+          initApp();
+        })
+        .catch(err => {
+          console.error("Error loading data:", err);
+          document.getElementById('loading').innerHTML = '<p class="text-danger">Failed to load workout data from backend.</p>';
+        });
+    }
 
     function initApp() {
       document.getElementById('loading').style.display = 'none';
@@ -109,6 +119,7 @@
         select.appendChild(opt);
       });
 
+      select.removeEventListener('change', updateProgressionAdvice);
       select.addEventListener('change', updateProgressionAdvice);
       updateProgressionAdvice();
     }
@@ -156,15 +167,23 @@
         rir: parseInt(document.getElementById('rir').value) || 0
       };
 
-      google.script.run.withSuccessHandler(function(res) {
+      fetch(API_URL, {
+        method: 'POST',
+        body: JSON.stringify(payload)
+      })
+      .then(res => res.json())
+      .then(res => {
         alert(res.message);
-        google.script.run.withSuccessHandler(function(data) {
-          globalData = data;
-          updateProgressionAdvice();
-          btn.disabled = false;
-          btn.textContent = 'Log Set & Update Stats';
-        }).getWorkoutData();
-      }).submitWorkout(payload);
+        fetchData(); // reload fresh data
+        btn.disabled = false;
+        btn.textContent = 'Log Set & Update Stats';
+      })
+      .catch(err => {
+        alert("Error saving workout.");
+        console.error(err);
+        btn.disabled = false;
+        btn.textContent = 'Log Set & Update Stats';
+      });
     });
   </script>
 </body>
