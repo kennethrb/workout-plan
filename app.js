@@ -552,12 +552,12 @@ function updateProgressionAdvice() {
       rationale = `⚠️ <b>Fatigue Flag:</b> Holding weight steady at ${targetWeight}kg. Focus on clean execution within your 8–12 range.`;
     } else if (chickenLegActive && isLower && last.rir <= 2) {
       targetWeight = roundToGymIncrement(lastWeight + 5);
-      targetReps = "8/8/8";
+      targetReps = Array(targetSets).fill(8).join('/');
       rationale = `⚖️ <strong class="text-warning">Auto-Balancing Boost:</strong> Lagging lower body detected! Forcing +5kg plate jump to <b>${targetWeight}kg</b> (Target: 8–12 reps).`;
     } else if (hitCeilingAcrossAllSets && last.rir <= 2) {
       // 🚀 DOUBLE PROGRESSION TRIGGER: Hit 12 reps on all sets -> Add weight, drop reps to bottom of range (8)
       targetWeight = roundToGymIncrement(lastWeight + 5);
-      targetReps = "8/8/8";
+      targetReps = Array(targetSets).fill(8).join('/');
       rationale = `🚀 <strong class="text-success">Rep Ceiling Reached!</strong> You hit 12+ reps across all sets last time. Stepping up to <b>${targetWeight}kg</b> (Resetting reps to 8–12 range).`;
     } else {
       // 📌 CONSOLIDATION: Build reps up towards 12
