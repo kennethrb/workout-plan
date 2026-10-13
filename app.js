@@ -38,7 +38,6 @@ function initApp() {
     const lastWorkoutDay = globalData.history[0].workoutDay;
     if (lastWorkoutDay) {
       const daySelect = document.getElementById('workoutDay');
-      // Check if option exists before setting
       for (let opt of daySelect.options) {
         if (opt.value === lastWorkoutDay) {
           daySelect.value = lastWorkoutDay;
@@ -58,9 +57,9 @@ function initApp() {
     document.getElementById(id).addEventListener('change', updateProgressionAdvice);
   });
 
-  document.getElementById('historySearch').addEventListener('input', renderHistoryList);
+  document.getElementById('historySearch').addEventListener('input', toggleClearSearchBtn);
 
-  updateExerciseDropdown(true); // pass true to honor last logged exercise pre-selection
+  updateExerciseDropdown(true); 
   evaluatePhysiqueBalance();
   renderHistoryList();
   initChartDropdown();
@@ -76,6 +75,25 @@ function showToast(message) {
     toast.show();
   } else {
     console.log("Toast Notice:", message);
+  }
+}
+
+function toggleClearSearchBtn() {
+  const searchInput = document.getElementById('historySearch');
+  const clearBtn = document.getElementById('clearSearchBtn');
+  if (searchInput && clearBtn) {
+    clearBtn.style.display = searchInput.value.trim().length > 0 ? 'block' : 'none';
+  }
+  renderHistoryList();
+}
+
+function clearHistorySearch() {
+  const searchInput = document.getElementById('historySearch');
+  const clearBtn = document.getElementById('clearSearchBtn');
+  if (searchInput) {
+    searchInput.value = '';
+    if (clearBtn) clearBtn.style.display = 'none';
+    renderHistoryList();
   }
 }
 
@@ -99,7 +117,6 @@ function updateExerciseDropdown(isInitialLoad = false) {
     select.appendChild(opt);
   });
 
-  // If initial load, default to the last logged exercise overall or for this day
   if (isInitialLoad && globalData.history && globalData.history.length > 0) {
     const lastEx = globalData.history[0].exercise;
     if (lastEx && exercisesForDay.includes(lastEx)) {
@@ -162,18 +179,13 @@ function evaluatePhysiqueBalance() {
   balanceText.innerHTML = analysis;
 }
 
-// 🗓️ Format Date WITHOUT Time
 function formatDateString(dateStr) {
   if (!dateStr) return '';
   try {
     let d = new Date(dateStr);
     if (isNaN(d)) return dateStr;
 
-    let options = { 
-      weekday: 'short', 
-      month: 'short', 
-      day: 'numeric'
-    };
+    let options = { weekday: 'short', month: 'short', day: 'numeric' };
     return d.toLocaleDateString('en-US', options);
   } catch (e) {
     return dateStr;
@@ -253,7 +265,7 @@ function calculatePlates(targetWeight) {
 }
 
 // ==========================================
-// 📈 CHART VISUAL TREND ENGINE (Defaults to Last Logged Exercise)
+// 📈 CHART VISUAL TREND ENGINE
 // ==========================================
 function initChartDropdown() {
   const select = document.getElementById('chartExerciseSelect');
@@ -272,7 +284,6 @@ function initChartDropdown() {
     select.appendChild(opt);
   });
 
-  // Default chart selection to the most recently logged exercise
   if (globalData.history && globalData.history.length > 0) {
     let lastLoggedEx = globalData.history[0].exercise;
     if (exercises.includes(lastLoggedEx)) {
@@ -375,7 +386,7 @@ function renderHistoryList() {
   let html = '<div class="list-group list-group-flush bg-transparent">';
   visibleItems.forEach(item => {
     let cleanDate = formatDateString(item.date);
-    let coachBadge = item.sleep ? `<div class="text-info mt-1" style="font-size: 0.75rem;">💤 Sleep: ${item.sleep} | ⚡ Stress: ${item.stress} | 🛡️ Phase: ${item.phase}</div>` : '';
+    let coachBadge = item.sleep ? `<div class="text-info mt-1" style="font-size: 0.78rem;">💤 Sleep: ${item.sleep} | ⚡ Stress: ${item.stress} | 🛡️ Phase: ${item.phase}</div>` : '';
     let cleanReps = (item.reps || "").toString().replace(/^'/, '');
     
     html += `
@@ -383,14 +394,14 @@ function renderHistoryList() {
         <div class="d-flex justify-content-between align-items-start mb-1">
           <div>
             <span class="fw-bold text-primary fs-6">${item.exercise}</span> 
-            <span class="text-muted small">(${item.workoutDay})</span>
+            <span class="small fw-semibold" style="color: #cbd5e1;">(${item.workoutDay})</span>
           </div>
           <div class="btn-group btn-group-sm flex-shrink-0">
             <button class="btn btn-outline-warning py-1 px-2" style="font-size: 0.75rem;" onclick='editLogEntry(${JSON.stringify(item)})'>Edit</button>
             <button class="btn btn-outline-danger py-1 px-2" style="font-size: 0.75rem;" onclick="deleteLogEntry(${item.rowIndex})">Del</button>
           </div>
         </div>
-        <div class="text-light small fw-medium">
+        <div class="text-light small fw-medium" style="color: #e2e8f0 !important;">
           📅 ${cleanDate} &nbsp;|&nbsp; 🏋️ <b>${item.weight}kg</b> &nbsp;|&nbsp; 🔢 Sets: ${item.sets} &nbsp;|&nbsp; Reps: [${cleanReps}]
         </div>
         ${coachBadge}
@@ -486,7 +497,7 @@ function cancelDeletePrompt() {
 }
 
 // ==========================================
-// 🤖 PURE HISTORICAL DOUBLE-PROGRESSION COACH
+// 🚀 PROFESSIONAL REP-RANGE DOUBLE PROGRESSION ENGINE (8-12 Rep Range)
 // ==========================================
 function updateProgressionAdvice() {
   const exercise = document.getElementById('exerciseSelect').value.trim();
@@ -512,33 +523,47 @@ function updateProgressionAdvice() {
   const isLower = isLowerBodyExercise(exercise);
 
   if (!last) {
-    rationale = "No prior logs found for this exercise. Starting clean at baseline weight.";
-    currentPrescription = { weight: targetWeight, sets: targetSets, reps: targetReps, rir: 2 };
+    rationale = "No prior logs found. Starting baseline at <b>8–12 Rep Range</b> target.";
+    currentPrescription = { weight: targetWeight, sets: targetSets, reps: "10/10/10", rir: 2 };
   } else {
-    // Rely completely on previous historical performance!
-    targetWeight = roundToGymIncrement(last.weight);
-    targetSets = last.sets || 3;
-    let cleanLastReps = (last.reps || "10/10/10").toString().replace(/^'/, '');
-    targetReps = cleanLastReps;
+    let lastWeight = last.weight || 0;
+    let lastSets = last.sets || 3;
+    let rawReps = (last.reps || "10/10/10").toString().replace(/^'/, '');
+    
+    // Parse last session reps into an array to check if ceiling (12 reps) was reached
+    let repSets = rawReps.split('/').map(r => parseInt(r.trim()) || 0);
+    let hitCeilingAcrossAllSets = repSets.length > 0 && repSets.every(r => r >= 12);
+
+    targetWeight = roundToGymIncrement(lastWeight);
+    targetSets = lastSets;
 
     if (phase.includes("Deload")) {
       targetWeight = Math.max(0, targetWeight - 5);
       targetSets = Math.max(2, targetSets - 1);
+      targetReps = rawReps;
       rationale = `🛌 <b>Deload Phase:</b> Dropped down one 5kg plate (${targetWeight}kg) with lower volume for active recovery.`;
     } else if (joints === "Mild Tweak") {
       targetWeight = Math.max(0, targetWeight - 5);
+      targetReps = rawReps;
       rationale = `🛡️ <b>Joint Safety Mode:</b> Reduced by one 5kg plate (${targetWeight}kg) due to reported discomfort.`;
     } else if (sleep === "Poor" || stress === "High") {
-      targetWeight = roundToGymIncrement(last.weight); 
-      rationale = `⚠️ <b>Fatigue Flag:</b> Holding weight steady at ${targetWeight}kg based on last session (${targetReps} reps). Focus on execution.`;
+      targetWeight = roundToGymIncrement(lastWeight);
+      targetReps = rawReps;
+      rationale = `⚠️ <b>Fatigue Flag:</b> Holding weight steady at ${targetWeight}kg. Focus on clean execution within your 8–12 range.`;
     } else if (chickenLegActive && isLower && last.rir <= 2) {
-      targetWeight = roundToGymIncrement(last.weight + 5);
-      rationale = `⚖️ <strong class="text-warning">Auto-Balancing Boost:</strong> Lagging lower body detected! Forcing a +5kg plate jump to <b>${targetWeight}kg</b>.`;
-    } else if (last.rir <= 1) {
-      targetWeight = roundToGymIncrement(last.weight + 5); 
-      rationale = `🚀 <strong class="text-success">5kg Plate Jump:</strong> Last session logged at ${last.weight}kg (RIR ${last.rir}). Stepping up to <b>${targetWeight}kg</b>!`;
+      targetWeight = roundToGymIncrement(lastWeight + 5);
+      targetReps = "8/8/8";
+      rationale = `⚖️ <strong class="text-warning">Auto-Balancing Boost:</strong> Lagging lower body detected! Forcing +5kg plate jump to <b>${targetWeight}kg</b> (Target: 8–12 reps).`;
+    } else if (hitCeilingAcrossAllSets && last.rir <= 2) {
+      // 🚀 DOUBLE PROGRESSION TRIGGER: Hit 12 reps on all sets -> Add weight, drop reps to bottom of range (8)
+      targetWeight = roundToGymIncrement(lastWeight + 5);
+      targetReps = "8/8/8";
+      rationale = `🚀 <strong class="text-success">Rep Ceiling Reached!</strong> You hit 12+ reps across all sets last time. Stepping up to <b>${targetWeight}kg</b> (Resetting reps to 8–12 range).`;
     } else {
-      rationale = `📌 <strong class="text-warning">Consolidation:</strong> Hold weight at ${targetWeight}kg and aim to match or beat your previous reps (${targetReps}).`;
+      // 📌 CONSOLIDATION: Build reps up towards 12
+      targetWeight = roundToGymIncrement(lastWeight);
+      targetReps = rawReps;
+      rationale = `📌 <strong class="text-warning">Rep-Range Progression:</strong> Hold at ${targetWeight}kg. Push your reps towards <b>12/12/12</b> before taking the 5kg jump.`;
     }
 
     currentPrescription = { weight: targetWeight, sets: targetSets, reps: targetReps, rir: last.rir <= 1 ? 2 : last.rir };
@@ -562,7 +587,7 @@ function applyPrescription() {
   
   const btn = document.getElementById('applyPrescriptionBtn');
   btn.textContent = '✅ Applied!';
-  setTimeout(() => { btn.textContent = '📥 Apply Prescription'; }, 1500);
+  setTimeout(() => { btn.textContent = '📥 Apply'; }, 1500);
 }
 
 // ==========================================
