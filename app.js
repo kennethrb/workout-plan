@@ -455,11 +455,15 @@ function deleteLogEntry(rowIndex) {
 
   const container = document.getElementById('historyContainer');
   const confirmationHtml = `
-    <div id="deleteConfirmBanner" class="alert alert-danger bg-dark border-danger text-light py-2 px-3 mb-3 small d-flex justify-content-between align-items-center">
-      <span>🗑️ Delete entry for <b>${exerciseName}</b>?</span>
-      <div>
-        <button class="btn btn-sm btn-danger py-0 px-2 me-1" onclick="confirmDelete()">Yes, Delete</button>
-        <button class="btn btn-sm btn-outline-secondary py-0 px-2" onclick="cancelDeletePrompt()">Cancel</button>
+    <div id="deleteConfirmBanner" class="alert alert-danger bg-dark border-danger text-light p-3 mb-3 small">
+      <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2">
+        <div>
+          <span>🗑️ Delete entry for <strong class="text-white">${exerciseName}</strong>?</span>
+        </div>
+        <div class="d-flex gap-2 justify-content-end">
+          <button class="btn btn-sm btn-danger px-3 py-1 fw-bold" onclick="confirmDelete()">Yes, Delete</button>
+          <button class="btn btn-sm btn-outline-secondary px-3 py-1 text-light border-secondary" onclick="cancelDeletePrompt()">Cancel</button>
+        </div>
       </div>
     </div>
   `;
