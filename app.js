@@ -334,12 +334,12 @@ function renderProgressChart() {
       datasets: [{
         label: 'Working Weight (kg)',
         data: weights,
-        borderColor: '#3b82f6',
-        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+        borderColor: '#d32f2f',
+        backgroundColor: 'rgba(211, 47, 47, 0.1)',
         borderWidth: 2,
         fill: true,
         tension: 0.2,
-        pointBackgroundColor: '#3b82f6',
+        pointBackgroundColor: '#ffb300',
         pointRadius: 4
       }]
     },
@@ -386,7 +386,7 @@ function renderHistoryList() {
   let html = '<div class="list-group list-group-flush bg-transparent">';
   visibleItems.forEach(item => {
     let cleanDate = formatDateString(item.date);
-    let coachBadge = item.sleep ? `<div class="text-info mt-1" style="font-size: 0.78rem;">💤 Sleep: ${item.sleep} | ⚡ Stress: ${item.stress} | 🛡️ Phase: ${item.phase}</div>` : '';
+    let coachBadge = item.sleep ? `<div class="text-xtreme-gold mt-1" style="font-size: 0.78rem;">💤 Sleep: ${item.sleep} | ⚡ Stress: ${item.stress} | 🛡️ Phase: ${item.phase}</div>` : '';
     let cleanReps = (item.reps || "").toString().replace(/^'/, '');
     
     html += `
@@ -576,7 +576,7 @@ function updateProgressionAdvice() {
   let plateHint = currentPrescription.weight > 0 ? ` <br><small class="text-warning">🔩 Plates: ${calculatePlates(currentPrescription.weight)}</small>` : '';
 
   let html = `
-    <div class="mb-1 text-info">🎯 <b>Prescribed Target:</b> ${currentPrescription.weight} kg | ${currentPrescription.sets} sets | Reps: [${currentPrescription.reps}]${plateHint}</div>
+    <div class="mb-1 text-xtreme-gold">🎯 <b>Prescribed Target:</b> ${currentPrescription.weight} kg | ${currentPrescription.sets} sets | Reps: [${currentPrescription.reps}]${plateHint}</div>
     <div class="text-light mt-1">${rationale}</div>
   `;
   box.innerHTML = html;
