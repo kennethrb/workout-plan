@@ -393,7 +393,7 @@ function renderHistoryList() {
       <div class="list-group-item bg-transparent text-light border-secondary py-3 px-1">
         <div class="d-flex justify-content-between align-items-start mb-1">
           <div>
-            <span class="fw-bold text-primary fs-6">${item.exercise}</span> 
+            <span class="fw-bold text-xtreme-red fs-6">${item.exercise}</span> 
             <span class="small fw-semibold" style="color: #cbd5e1;">(${item.workoutDay})</span>
           </div>
           <div class="btn-group btn-group-sm flex-shrink-0">
