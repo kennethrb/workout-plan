@@ -151,3 +151,10 @@ body {
   justify-content: center;
   min-height: 60vh;
 }
+
+/* --- Xtreme Fitness Brand Color Extensions --- */
+.text-xtreme-red { color: #d32f2f !important; }
+.text-xtreme-gold { color: #ffb300 !important; }
+.bg-xtreme-gold-soft { background-color: rgba(255, 179, 0, 0.08) !important; border-color: rgba(255, 179, 0, 0.3) !important; }
+.border-xtreme-gold { border-color: #ffb300 !important; }
+.border-xtreme-red { border-color: #d32f2f !important; }
