@@ -667,3 +667,32 @@ document.getElementById('workoutForm').addEventListener('submit', function(e) {
     btn.textContent = editingRowIndex ? 'Update Log Entry' : 'Log Set & Update Stats';
   });
 });
+
+// ==========================================
+// 🔍 WORKOUT QA & DIAGNOSTIC CONSOLE TOOL
+// ==========================================
+function runWorkoutQA() {
+  console.group("🏋️ Xtreme Overload App - QA Diagnostics");
+  
+  console.log("1️⃣ Global Data Loaded:", globalData);
+  console.log("2️⃣ Current Phase:", globalData.currentPhase);
+  console.log("3️⃣ Total History Entries:", globalData.history ? globalData.history.length : 0);
+  
+  const currentEx = document.getElementById('exerciseSelect') ? document.getElementById('exerciseSelect').value : "None selected";
+  console.log("4️⃣ Currently Selected Exercise:", currentEx);
+  
+  let lastLog = globalData.lastLogs ? globalData.lastLogs[currentEx] : null;
+  console.log("5️⃣ Last Log for Selected Exercise:", lastLog);
+  
+  console.log("6️⃣ Active Current Prescription Object:", currentPrescription);
+  
+  console.groupEnd();
+  
+  return {
+    phase: globalData.currentPhase,
+    selectedExercise: currentEx,
+    lastLog: lastLog,
+    prescription: currentPrescription,
+    historyCount: globalData.history ? globalData.history.length : 0
+  };
+}
