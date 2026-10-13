@@ -1,135 +1,128 @@
 :root {
-  --bg-color: #070b14;
-  --card-bg: #101726;
+  --bg-color: #050811;
+  --card-bg: #0f172a;
   --card-border: #1e293b;
-  --text-main: #ffffff;
-  --text-muted: #94a3b8; /* High contrast muted text */
-  --text-bright: #f8fafc;
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
   --primary: #3b82f6;
   --primary-hover: #2563eb;
   --success: #34d399;
   --warning: #fbbf24;
   --danger: #f87171;
-  --radius-lg: 16px;
-  --radius-md: 10px;
+  --radius-lg: 18px;
+  --radius-md: 12px;
 }
 
 body {
   background-color: var(--bg-color);
   color: var(--text-main);
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  padding-bottom: 80px;
+  padding-bottom: 90px;
   margin: 0;
   -webkit-tap-highlight-color: transparent;
   -webkit-font-smoothing: antialiased;
 }
 
 .app-container {
-  max-width: 540px;
+  max-width: 520px;
   margin: 0 auto;
-  padding: 20px 16px;
+  padding: 16px 14px;
 }
 
 .brand-header {
   text-align: center;
-  margin-bottom: 24px;
+  margin-bottom: 20px;
 }
 
 .brand-header h2 {
-  font-size: 1.75rem;
+  font-size: 1.6rem;
   font-weight: 800;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.02em;
   color: var(--text-main);
   margin: 0;
 }
 
 .card {
-  background-color: var(--card-bg) !important;
+  background: linear-gradient(145deg, #0f172a 0%, #0b1120 100%) !important;
   border: 1px solid var(--card-border) !important;
   border-radius: var(--radius-lg);
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.5);
   color: var(--text-main) !important;
-  padding: 22px;
-  margin-bottom: 20px;
+  padding: 18px;
+  margin-bottom: 16px;
 }
 
 .form-label {
   font-weight: 600;
-  font-size: 0.85rem;
+  font-size: 0.78rem;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: #cbd5e1 !important; /* Brighter slate for high readability */
-  margin-bottom: 8px;
+  letter-spacing: 0.06em;
+  color: #94a3b8 !important;
+  margin-bottom: 6px;
 }
 
 .form-control, .form-select {
-  background-color: #070b14 !important;
+  background-color: #050811 !important;
   color: var(--text-main) !important;
-  border: 1px solid #334155 !important;
+  border: 1px solid #1e293b !important;
   border-radius: var(--radius-md);
   padding: 12px 14px;
-  font-size: 1rem;
+  font-size: 0.95rem;
   min-height: 48px;
+  transition: all 0.2s ease;
 }
 
 .form-control::placeholder {
-  color: #64748b !important;
+  color: #475569 !important;
   opacity: 1;
 }
 
 .form-control:focus, .form-select:focus {
   border-color: var(--primary) !important;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25) !important;
-  color: var(--text-main) !important;
-  background-color: #070b14 !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2) !important;
+  background-color: #050811 !important;
 }
 
-/* Advisor Box Improvements */
+/* Premium Advisor Box */
 .advisor-box {
-  background-color: rgba(59, 130, 246, 0.1);
-  border: 1px solid rgba(59, 130, 246, 0.25);
+  background: rgba(59, 130, 246, 0.06);
+  border: 1px solid rgba(59, 130, 246, 0.2);
   border-left: 4px solid var(--primary);
   padding: 14px;
   border-radius: var(--radius-md);
-  margin-bottom: 20px;
-  color: var(--text-bright);
+  margin-bottom: 16px;
 }
 
 .balance-box {
-  background-color: rgba(16, 185, 129, 0.1);
-  border: 1px solid rgba(16, 185, 129, 0.25);
+  background: rgba(52, 211, 153, 0.06);
+  border: 1px solid rgba(52, 211, 153, 0.2);
   border-left: 4px solid var(--success);
   padding: 14px;
   border-radius: var(--radius-md);
-  margin-bottom: 20px;
-  color: var(--text-bright);
+  margin-bottom: 16px;
 }
 
-/* History List High Contrast Styling */
+/* History List Clean Layout */
 .list-group-item {
   background-color: transparent !important;
   border-color: #1e293b !important;
-  color: var(--text-main) !important;
-}
-
-.list-group-item .text-muted {
-  color: #94a3b8 !important; /* Forces muted subtext to be fully readable */
+  padding: 12px 4px !important;
 }
 
 .btn-primary {
-  background-color: var(--primary);
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
   border: none;
   border-radius: var(--radius-md);
   padding: 14px;
   font-weight: 700;
-  font-size: 1rem;
-  min-height: 50px;
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
-  transition: background-color 0.2s ease;
+  font-size: 0.95rem;
+  min-height: 48px;
+  box-shadow: 0 4px 14px rgba(59, 130, 246, 0.35);
+  transition: opacity 0.2s ease;
 }
 
-.btn-primary:hover {
-  background-color: var(--primary-hover);
+.btn-primary:active {
+  opacity: 0.85;
 }
 
 #loading {
