@@ -375,19 +375,25 @@ function renderHistoryList() {
   let html = '<div class="list-group list-group-flush bg-transparent">';
   visibleItems.forEach(item => {
     let cleanDate = formatDateString(item.date);
-    let coachBadge = item.sleep ? `<br><small class="text-info">Sleep: ${item.sleep} | Stress: ${item.stress} | Phase: ${item.phase}</small>` : '';
+    let coachBadge = item.sleep ? `<div class="text-info mt-1" style="font-size: 0.75rem;">💤 Sleep: ${item.sleep} | ⚡ Stress: ${item.stress} | 🛡️ Phase: ${item.phase}</div>` : '';
     let cleanReps = (item.reps || "").toString().replace(/^'/, '');
+    
     html += `
-      <div class="list-group-item bg-transparent text-light border-secondary d-flex justify-content-between align-items-center py-2 px-0">
-        <div class="small text-truncate me-2">
-          <span class="fw-bold text-primary">${item.exercise}</span> <span class="text-muted">(${item.workoutDay})</span><br>
-          <span class="text-light">${cleanDate} | Wt: ${item.weight}kg | Sets: ${item.sets} | Reps: ${cleanReps} | RIR: ${item.rir}</span>
-          ${coachBadge}
+      <div class="list-group-item bg-transparent text-light border-secondary py-3 px-1">
+        <div class="d-flex justify-content-between align-items-start mb-1">
+          <div>
+            <span class="fw-bold text-primary fs-6">${item.exercise}</span> 
+            <span class="text-muted small">(${item.workoutDay})</span>
+          </div>
+          <div class="btn-group btn-group-sm flex-shrink-0">
+            <button class="btn btn-outline-warning py-1 px-2" style="font-size: 0.75rem;" onclick='editLogEntry(${JSON.stringify(item)})'>Edit</button>
+            <button class="btn btn-outline-danger py-1 px-2" style="font-size: 0.75rem;" onclick="deleteLogEntry(${item.rowIndex})">Del</button>
+          </div>
         </div>
-        <div class="btn-group btn-group-sm flex-shrink-0">
-          <button class="btn btn-outline-warning py-0 px-2" onclick='editLogEntry(${JSON.stringify(item)})'>Edit</button>
-          <button class="btn btn-outline-danger py-0 px-2" onclick="deleteLogEntry(${item.rowIndex})">Del</button>
+        <div class="text-light small fw-medium">
+          📅 ${cleanDate} &nbsp;|&nbsp; 🏋️ <b>${item.weight}kg</b> &nbsp;|&nbsp; 🔢 Sets: ${item.sets} &nbsp;|&nbsp; Reps: [${cleanReps}]
         </div>
+        ${coachBadge}
       </div>
     `;
   });
