@@ -33,7 +33,22 @@ function initApp() {
     phaseInput.value = globalData.currentPhase;
   }
 
-  document.getElementById('workoutDay').addEventListener('change', updateExerciseDropdown);
+  // Pre-select last used Workout Day if history exists
+  if (globalData.history && globalData.history.length > 0) {
+    const lastWorkoutDay = globalData.history[0].workoutDay;
+    if (lastWorkoutDay) {
+      const daySelect = document.getElementById('workoutDay');
+      // Check if option exists before setting
+      for (let opt of daySelect.options) {
+        if (opt.value === lastWorkoutDay) {
+          daySelect.value = lastWorkoutDay;
+          break;
+        }
+      }
+    }
+  }
+
+  document.getElementById('workoutDay').addEventListener('change', () => updateExerciseDropdown());
   document.getElementById('exerciseSelect').addEventListener('change', function() {
     updateProgressionAdvice();
     checkTimedExercise();
@@ -45,7 +60,7 @@ function initApp() {
 
   document.getElementById('historySearch').addEventListener('input', renderHistoryList);
 
-  updateExerciseDropdown();
+  updateExerciseDropdown(true); // pass true to honor last logged exercise pre-selection
   evaluatePhysiqueBalance();
   renderHistoryList();
   initChartDropdown();
@@ -64,7 +79,7 @@ function showToast(message) {
   }
 }
 
-function updateExerciseDropdown() {
+function updateExerciseDropdown(isInitialLoad = false) {
   const workoutDay = document.getElementById('workoutDay').value;
   const select = document.getElementById('exerciseSelect');
   select.innerHTML = '';
@@ -83,6 +98,14 @@ function updateExerciseDropdown() {
     opt.textContent = ex;
     select.appendChild(opt);
   });
+
+  // If initial load, default to the last logged exercise overall or for this day
+  if (isInitialLoad && globalData.history && globalData.history.length > 0) {
+    const lastEx = globalData.history[0].exercise;
+    if (lastEx && exercisesForDay.includes(lastEx)) {
+      select.value = lastEx;
+    }
+  }
 
   updateProgressionAdvice();
   checkTimedExercise();
@@ -139,6 +162,7 @@ function evaluatePhysiqueBalance() {
   balanceText.innerHTML = analysis;
 }
 
+// 🗓️ Format Date WITHOUT Time
 function formatDateString(dateStr) {
   if (!dateStr) return '';
   try {
@@ -148,12 +172,9 @@ function formatDateString(dateStr) {
     let options = { 
       weekday: 'short', 
       month: 'short', 
-      day: 'numeric', 
-      hour: '2-digit', 
-      minute: '2-digit',
-      hour12: true 
+      day: 'numeric'
     };
-    return d.toLocaleString('en-US', options).replace(',', ' •');
+    return d.toLocaleDateString('en-US', options);
   } catch (e) {
     return dateStr;
   }
@@ -232,14 +253,14 @@ function calculatePlates(targetWeight) {
 }
 
 // ==========================================
-// 📈 CHART VISUAL TREND ENGINE
+// 📈 CHART VISUAL TREND ENGINE (Defaults to Last Logged Exercise)
 // ==========================================
 function initChartDropdown() {
   const select = document.getElementById('chartExerciseSelect');
   if (!select) return;
   select.innerHTML = '';
 
-  let exercises = Object.keys(globalData.references || {});
+  let exercises = Object.keys(globalData.lastLogs || {});
   if (exercises.length === 0 && globalData.history) {
     exercises = [...new Set(globalData.history.map(item => item.exercise))];
   }
@@ -250,6 +271,14 @@ function initChartDropdown() {
     opt.textContent = ex;
     select.appendChild(opt);
   });
+
+  // Default chart selection to the most recently logged exercise
+  if (globalData.history && globalData.history.length > 0) {
+    let lastLoggedEx = globalData.history[0].exercise;
+    if (exercises.includes(lastLoggedEx)) {
+      select.value = lastLoggedEx;
+    }
+  }
 
   renderProgressChart();
 }
@@ -398,7 +427,7 @@ function cancelEdit() {
   document.getElementById('formTitle').textContent = 'Log Exercise Set';
   document.getElementById('submitBtn').textContent = 'Log Set & Update Stats';
   document.getElementById('cancelEditBtn').style.display = 'none';
-  updateExerciseDropdown();
+  updateExerciseDropdown(true);
 }
 
 function deleteLogEntry(rowIndex) {
@@ -450,9 +479,11 @@ function cancelDeletePrompt() {
   if (banner) banner.remove();
 }
 
+// ==========================================
+// 🤖 PURE HISTORICAL DOUBLE-PROGRESSION COACH
+// ==========================================
 function updateProgressionAdvice() {
   const exercise = document.getElementById('exerciseSelect').value.trim();
-  const ref = globalData.references[exercise] || {};
   let last = globalData.lastLogs[exercise] || null;
   
   if (!last && globalData.history && globalData.history.length > 0) {
@@ -466,40 +497,42 @@ function updateProgressionAdvice() {
 
   const box = document.getElementById('suggestionText');
   
-  let targetSets = ref.sets || 3;
-  let targetReps = ref.repsTarget || '10/10/10';
-  let targetWeight = roundToGymIncrement(ref.weightTarget || 0);
+  let targetSets = 3;
+  let targetReps = '10/10/10';
+  let targetWeight = 20;
   let rationale = "";
 
   const chickenLegActive = isChickenLegRiskActive();
   const isLower = isLowerBodyExercise(exercise);
 
   if (!last) {
-    rationale = "No prior logs found. Starting with your baseline library target.";
-    currentPrescription = { weight: targetWeight, sets: targetSets, reps: targetReps, rir: 1 };
+    rationale = "No prior logs found for this exercise. Starting clean at baseline weight.";
+    currentPrescription = { weight: targetWeight, sets: targetSets, reps: targetReps, rir: 2 };
   } else {
+    // Rely completely on previous historical performance!
     targetWeight = roundToGymIncrement(last.weight);
-    targetSets = last.sets;
-    targetReps = last.reps;
+    targetSets = last.sets || 3;
+    let cleanLastReps = (last.reps || "10/10/10").toString().replace(/^'/, '');
+    targetReps = cleanLastReps;
 
     if (phase.includes("Deload")) {
       targetWeight = Math.max(0, targetWeight - 5);
-      targetSets = Math.max(2, last.sets - 1);
+      targetSets = Math.max(2, targetSets - 1);
       rationale = `🛌 <b>Deload Phase:</b> Dropped down one 5kg plate (${targetWeight}kg) with lower volume for active recovery.`;
     } else if (joints === "Mild Tweak") {
       targetWeight = Math.max(0, targetWeight - 5);
       rationale = `🛡️ <b>Joint Safety Mode:</b> Reduced by one 5kg plate (${targetWeight}kg) due to reported discomfort.`;
     } else if (sleep === "Poor" || stress === "High") {
       targetWeight = roundToGymIncrement(last.weight); 
-      rationale = `⚠️ <b>Fatigue Flag:</b> Holding weight steady at ${targetWeight}kg. Focus on clean form and execution.`;
+      rationale = `⚠️ <b>Fatigue Flag:</b> Holding weight steady at ${targetWeight}kg based on last session (${targetReps} reps). Focus on execution.`;
     } else if (chickenLegActive && isLower && last.rir <= 2) {
       targetWeight = roundToGymIncrement(last.weight + 5);
       rationale = `⚖️ <strong class="text-warning">Auto-Balancing Boost:</strong> Lagging lower body detected! Forcing a +5kg plate jump to <b>${targetWeight}kg</b>.`;
     } else if (last.rir <= 1) {
       targetWeight = roundToGymIncrement(last.weight + 5); 
-      rationale = `🚀 <strong class="text-success">5kg Plate Jump:</strong> Crushed last session! Stepping up to <b>${targetWeight}kg</b> (your gym's 5kg plate step).`;
+      rationale = `🚀 <strong class="text-success">5kg Plate Jump:</strong> Last session logged at ${last.weight}kg (RIR ${last.rir}). Stepping up to <b>${targetWeight}kg</b>!`;
     } else {
-      rationale = `📌 <strong class="text-warning">Consolidation:</strong> Hold weight at ${targetWeight}kg and build extra reps before taking the 5kg jump.`;
+      rationale = `📌 <strong class="text-warning">Consolidation:</strong> Hold weight at ${targetWeight}kg and aim to match or beat your previous reps (${targetReps}).`;
     }
 
     currentPrescription = { weight: targetWeight, sets: targetSets, reps: targetReps, rir: last.rir <= 1 ? 2 : last.rir };
@@ -594,7 +627,6 @@ document.getElementById('workoutForm').addEventListener('submit', function(e) {
     fetchData();  
     btn.disabled = false;
     
-    // Trigger rest timer and smoothly scroll back up to the top view
     startRestTimer(90);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   })
