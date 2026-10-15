@@ -72,7 +72,6 @@ function initApp() {
     phaseInput.value = globalData.currentPhase;
   }
 
-  // Pre-select last used Workout Day if history exists
   if (globalData.history && globalData.history.length > 0) {
     const lastWorkoutDay = globalData.history[0].workoutDay;
     if (lastWorkoutDay) {
@@ -107,6 +106,7 @@ function initApp() {
 
   updateExerciseDropdown(true); 
   evaluatePhysiqueBalance();
+  renderWeeklyVolumeTracker(); // <--- ADDED HERE!
   renderHistoryList();
   initChartDropdown();
 }
@@ -827,4 +827,128 @@ function runWorkoutQA() {
     prescription: currentPrescription,
     historyCount: globalData.history ? globalData.history.length : 0
   };
+}
+
+// ==========================================
+// 📊 WEEKLY VOLUME TRACKER ENGINE
+// ==========================================
+const EXERCISE_MUSCLE_MAP = {
+  "Bench Press": "Chest",
+  "Incline Dumbell Press": "Chest",
+  "Barbell Row": "Back",
+  "Pull-ups / Lat Pulldown": "Back",
+  "Seated Cable Row": "Back",
+  "Face Pull": "Back",
+  "Overhead Press": "Shoulders",
+  "Dumbell Shoulder Press": "Shoulders",
+  "Lateral Raises": "Shoulders",
+  "Bicep Curl": "Arms",
+  "Tricep Pushdown": "Arms",
+  "Back Squat": "Quads",
+  "Front Squat / Leg Press": "Quads",
+  "Walking Lunges": "Quads",
+  "Bulgarian Split Squat": "Quads",
+  "Romanian Deadlift": "Hamstrings/Glutes",
+  "Deadlift": "Hamstrings/Glutes",
+  "Hamstring Curl": "Hamstrings/Glutes",
+  "Hip Thrust / Glute Bridge": "Hamstrings/Glutes",
+  "Calf Raises": "Calves",
+  "Plank": "Core",
+  "Hanging Leg Raises": "Core",
+  "Ab Wheel": "Core",
+  "Cable Woodchop": "Core"
+};
+
+function renderWeeklyVolumeTracker() {
+  const container = document.getElementById('volumeTrackerContainer');
+  const badge = document.getElementById('cycleWeekBadge');
+  if (!container) return;
+
+  if (badge && globalData.cycleWeek) {
+    badge.textContent = `Cycle Week ${globalData.cycleWeek} (${globalData.currentPhase || 'Accumulation'})`;
+  }
+
+  const history = globalData.history || [];
+  
+  const now = new Date();
+  const startOfWeek = new Date(now);
+  startOfWeek.setDate(now.getDate() - now.getDay());
+  startOfWeek.setHours(0, 0, 0, 0);
+
+  let volumeMap = {
+    "Chest": 0,
+    "Back": 0,
+    "Shoulders": 0,
+    "Quads": 0,
+    "Hamstrings/Glutes": 0,
+    "Arms": 0
+  };
+
+  history.forEach(item => {
+    if (!item.date) return;
+    let logDate = new Date(item.date);
+    if (!isNaN(logDate) && logDate >= startOfWeek) {
+      let muscle = EXERCISE_MUSCLE_MAP[item.exercise];
+      let sets = parseInt(item.sets) || 0;
+      if (muscle && volumeMap[muscle] !== undefined) {
+        volumeMap[muscle] += sets;
+      }
+    }
+  });
+
+  let totalActiveSets = Object.values(volumeMap).reduce((a, b) => a + b, 0);
+  if (totalActiveSets === 0 && history.length > 0) {
+    history.slice(0, 12).forEach(item => {
+      let muscle = EXERCISE_MUSCLE_MAP[item.exercise];
+      let sets = parseInt(item.sets) || 0;
+      if (muscle && volumeMap[muscle] !== undefined) {
+        volumeMap[muscle] += sets;
+      }
+    });
+  }
+
+  let html = '';
+  let targetMin = 10;
+  let targetMax = 20;
+
+  Object.keys(volumeMap).forEach(muscle => {
+    let sets = volumeMap[muscle];
+    let percentage = Math.min(100, Math.round((sets / targetMax) * 100));
+    
+    let statusText = 'Optimal';
+    let barColor = 'bg-success';
+    let textClass = 'text-success';
+
+    if (sets < targetMin) {
+      statusText = 'Under-Target';
+      barColor = 'bg-warning';
+      textClass = 'text-warning';
+    } else if (sets > targetMax) {
+      statusText = 'High Fatigue Warning';
+      barColor = 'bg-danger';
+      textClass = 'text-danger';
+    }
+
+    html += `
+      <div class="mb-3">
+        <div class="d-flex justify-content-between small text-light mb-1">
+          <span>${muscle}</span>
+          <span class="fw-bold ${textClass}">${sets} / ${targetMax} sets <small class="fw-normal text-muted">(${statusText})</small></span>
+        </div>
+        <div class="progress bg-dark" style="height: 6px; border: 1px solid #2a2f3d;">
+          <div class="progress-bar ${barColor}" role="progressbar" style="width: ${percentage}%;"></div>
+        </div>
+      </div>
+    `;
+  });
+
+  let laggingMuscle = Object.keys(volumeMap).reduce((minMuscle, m) => volumeMap[m] < volumeMap[minMuscle] ? m : minMuscle, Object.keys(volumeMap)[0]);
+
+  html += `
+    <div class="pt-2 border-top border-secondary border-opacity-25 text-light small" style="font-size: 0.8rem;">
+      💡 <b>Coach Tip:</b> ${laggingMuscle} has the lowest volume this week (${volumeMap[laggingMuscle]} sets). Consider prioritizing it on your next split day.
+    </div>
+  `;
+
+  container.innerHTML = html;
 }
