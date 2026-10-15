@@ -6,6 +6,7 @@ let currentPrescription = null;
 let restTimerInterval = null;
 let myProgressChart = null;
 let pendingDeleteRowIndex = null;
+let isPlateauBreakerActive = false; // Toggle for plateau reset mode
 
 // ==========================================
 // 🏋️ OPTIMIZED EXERCISE SEQUENCE MAP
@@ -85,8 +86,15 @@ function initApp() {
     }
   }
 
-  document.getElementById('workoutDay').addEventListener('change', () => updateExerciseDropdown());
+  document.getElementById('workoutDay').addEventListener('change', () => {
+    isPlateauBreakerActive = false;
+    updatePlateauBreakerUI();
+    updateExerciseDropdown();
+  });
+  
   document.getElementById('exerciseSelect').addEventListener('change', function() {
+    isPlateauBreakerActive = false;
+    updatePlateauBreakerUI();
     updateProgressionAdvice();
     checkTimedExercise();
   });
@@ -135,6 +143,26 @@ function clearHistorySearch() {
   }
 }
 
+function togglePlateauBreaker() {
+  isPlateauBreakerActive = !isPlateauBreakerActive;
+  updatePlateauBreakerUI();
+  updateProgressionAdvice();
+}
+
+function updatePlateauBreakerUI() {
+  const btn = document.getElementById('plateauBreakerBtn');
+  if (!btn) return;
+  if (isPlateauBreakerActive) {
+    btn.classList.remove('btn-outline-danger');
+    btn.classList.add('btn-danger', 'text-white');
+    btn.textContent = '🔄 Reset Active (80%)';
+  } else {
+    btn.classList.remove('btn-danger', 'text-white');
+    btn.classList.add('btn-outline-danger');
+    btn.textContent = '🔄 Reset / Plateau Breaker';
+  }
+}
+
 function updateExerciseDropdown(isInitialLoad = false) {
   const workoutDay = document.getElementById('workoutDay').value;
   const select = document.getElementById('exerciseSelect');
@@ -142,13 +170,10 @@ function updateExerciseDropdown(isInitialLoad = false) {
 
   let exercisesForDay = [];
   
-  // Use pre-sorted sequence if available, fallback to global workoutMap or exercises
   if (WORKOUT_SEQUENCES[workoutDay]) {
     let availableFromMap = (globalData.workoutMap && globalData.workoutMap[workoutDay]) ? globalData.workoutMap[workoutDay] : globalData.exercises;
-    // Filter sequence to only include exercises that exist in the database/map
     exercisesForDay = WORKOUT_SEQUENCES[workoutDay].filter(ex => availableFromMap.includes(ex));
     
-    // Append any remaining exercises not explicitly in the sequence map
     availableFromMap.forEach(ex => {
       if (!exercisesForDay.includes(ex)) exercisesForDay.push(ex);
     });
@@ -588,7 +613,6 @@ function updateProgressionAdvice() {
   
   const compound = isCompoundExercise(exercise);
   
-  // Baselines: Compounds get 3-4 sets & 6-10 rep range (ceiling 10). Isolations get 2-3 sets & 10-15 rep range (ceiling 15).
   let defaultSets = compound ? 4 : 3;
   let minRepTarget = compound ? 6 : 10;
   let maxRepCeiling = compound ? 10 : 15;
@@ -610,14 +634,20 @@ function updateProgressionAdvice() {
     let lastSets = last.sets || defaultSets;
     let rawReps = (last.reps || defaultRepsStr).toString().replace(/^'/, '');
     
-    // Parse last session reps into an array to check if ceiling was reached across all sets
     let repSets = rawReps.split('/').map(r => parseInt(r.trim()) || 0);
     let hitCeilingAcrossAllSets = repSets.length > 0 && repSets.every(r => r >= maxRepCeiling);
 
     targetWeight = roundToGymIncrement(lastWeight);
-    targetSets = lastSets; // Preserve current working set volume unless deloaded
+    targetSets = lastSets;
 
-    if (phase.includes("Deload")) {
+    if (isPlateauBreakerActive) {
+      // 🔄 PLATEAU BREAKER RESET: Drop weight to ~80% of last logged weight, rounded to 5kg increments, reset reps to bottom of range
+      let resetRaw = lastWeight * 0.8;
+      targetWeight = roundToGymIncrement(resetRaw);
+      if (targetWeight <= 0) targetWeight = 5;
+      targetReps = Array(targetSets).fill(minRepTarget).join('/');
+      rationale = `🔄 <strong class="text-danger">Plateau Breaker Active:</strong> Resetting weight to ~80% of your max (${targetWeight}kg) with reps reset to [${targetReps}]. Build momentum cleanly back past your plateau!`;
+    } else if (phase.includes("Deload")) {
       targetWeight = Math.max(0, targetWeight - 5);
       targetSets = Math.max(2, targetSets - 1);
       targetReps = rawReps;
@@ -635,12 +665,10 @@ function updateProgressionAdvice() {
       targetReps = Array(targetSets).fill(minRepTarget).join('/');
       rationale = `⚖️ <strong class="text-warning">Auto-Balancing Boost:</strong> Lagging lower body detected! Forcing +5kg plate jump to <b>${targetWeight}kg</b> (Target: ${minRepTarget}–${maxRepCeiling} reps).`;
     } else if (hitCeilingAcrossAllSets && last.rir <= 2) {
-      // 🚀 DOUBLE PROGRESSION TRIGGER: Hit ceiling reps on all sets -> Add weight, drop reps to bottom of range
       targetWeight = roundToGymIncrement(lastWeight + 5);
       targetReps = Array(targetSets).fill(minRepTarget).join('/');
       rationale = `🚀 <strong class="text-success">Rep Ceiling Reached!</strong> You hit ${maxRepCeiling}+ reps across all sets last time. Stepping up to <b>${targetWeight}kg</b> (Resetting reps to ${minRepTarget}–${maxRepCeiling} range).`;
     } else {
-      // 📌 CONSOLIDATION: Build reps up towards ceiling
       targetWeight = roundToGymIncrement(lastWeight);
       targetReps = rawReps;
       rationale = `📌 <strong class="text-warning">Rep-Range Progression:</strong> Hold at ${targetWeight}kg. Push your reps towards <b>${maxRepCeiling}</b> across all sets before taking the 5kg jump.`;
@@ -734,6 +762,8 @@ document.getElementById('workoutForm').addEventListener('submit', function(e) {
   .then(res => res.json())
   .then(res => {
     showToast(res.message || "Workout saved successfully!");
+    isPlateauBreakerActive = false; // Reset toggle after saving
+    updatePlateauBreakerUI();
     cancelEdit(); 
     fetchData();  
     btn.disabled = false;
