@@ -127,7 +127,10 @@
             <div class="d-flex flex-column gap-2 mb-2">
               <div class="d-flex justify-content-between align-items-center">
                 <h6 class="text-xtreme-red fw-bold mb-0" style="font-size: 0.9rem;">🤖 Rep-Range Coach Advisor</h6>
-                <button type="button" class="btn btn-sm btn-outline-warning px-3 py-1 fw-bold" id="applyPrescriptionBtn" style="font-size: 0.75rem; border-radius: 8px; border-color: #ffb300; color: #ffb300;" onclick="applyPrescription()">📥 Apply</button>
+                <div class="d-flex gap-1">
+                  <button type="button" class="btn btn-sm btn-outline-danger px-2 py-1 fw-bold" id="plateauBreakerBtn" style="font-size: 0.70rem; border-radius: 8px;" onclick="togglePlateauBreaker()" title="Reset stalled exercise to 80% weight">🔄 Reset / Plateau Breaker</button>
+                  <button type="button" class="btn btn-sm btn-outline-warning px-3 py-1 fw-bold" id="applyPrescriptionBtn" style="font-size: 0.75rem; border-radius: 8px; border-color: #ffb300; color: #ffb300;" onclick="applyPrescription()">📥 Apply</button>
+                </div>
               </div>
             </div>
             <div id="suggestionText" class="text-light small lh-sm">Select an exercise to generate exact rep-range progression targets.</div>
