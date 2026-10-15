@@ -501,7 +501,23 @@ function cancelDeletePrompt() {
 }
 
 // ==========================================
-// 🚀 PROFESSIONAL REP-RANGE DOUBLE PROGRESSION ENGINE (8-12 Rep Range)
+// 🚀 COMPOUND VS ISOLATION CLASSIFICATION ENGINE
+// ==========================================
+function isCompoundExercise(exerciseName) {
+  let nameLower = exerciseName.toLowerCase();
+  return nameLower.includes('squat') || 
+         nameLower.includes('bench') || 
+         nameLower.includes('press') || 
+         nameLower.includes('row') || 
+         nameLower.includes('deadlift') || 
+         nameLower.includes('pull-up') || 
+         nameLower.includes('pulldown') || 
+         nameLower.includes('thrust') || 
+         nameLower.includes('lunge');
+}
+
+// ==========================================
+// 🚀 PROFESSIONAL REP-RANGE DOUBLE PROGRESSION ENGINE
 // ==========================================
 function updateProgressionAdvice() {
   const exercise = document.getElementById('exerciseSelect').value.trim();
@@ -518,8 +534,14 @@ function updateProgressionAdvice() {
 
   const box = document.getElementById('suggestionText');
   
+  const compound = isCompoundExercise(exercise);
+  // Compound: 6-10 rep range (ceiling 10), Isolation: 10-15 rep range (ceiling 15)
+  let minRepTarget = compound ? 6 : 10;
+  let maxRepCeiling = compound ? 10 : 15;
+  let defaultRepsStr = compound ? "8/8/8" : "12/12/12";
+
   let targetSets = 3;
-  let targetReps = '10/10/10';
+  let targetReps = defaultRepsStr;
   let targetWeight = 20;
   let rationale = "";
 
@@ -527,16 +549,16 @@ function updateProgressionAdvice() {
   const isLower = isLowerBodyExercise(exercise);
 
   if (!last) {
-    rationale = "No prior logs found. Starting baseline at <b>8–12 Rep Range</b> target.";
-    currentPrescription = { weight: targetWeight, sets: targetSets, reps: "10/10/10", rir: 2 };
+    rationale = `No prior logs found. Starting baseline for this ${compound ? 'Compound (6–10 reps)' : 'Isolation (10–15 reps)'} movement.`;
+    currentPrescription = { weight: targetWeight, sets: targetSets, reps: defaultRepsStr, rir: 2 };
   } else {
     let lastWeight = last.weight || 0;
     let lastSets = last.sets || 3;
-    let rawReps = (last.reps || "10/10/10").toString().replace(/^'/, '');
+    let rawReps = (last.reps || defaultRepsStr).toString().replace(/^'/, '');
     
-    // Parse last session reps into an array to check if ceiling (12 reps) was reached
+    // Parse last session reps into an array to check if ceiling was reached across all sets
     let repSets = rawReps.split('/').map(r => parseInt(r.trim()) || 0);
-    let hitCeilingAcrossAllSets = repSets.length > 0 && repSets.every(r => r >= 12);
+    let hitCeilingAcrossAllSets = repSets.length > 0 && repSets.every(r => r >= maxRepCeiling);
 
     targetWeight = roundToGymIncrement(lastWeight);
     targetSets = lastSets;
@@ -553,21 +575,21 @@ function updateProgressionAdvice() {
     } else if (sleep === "Poor" || stress === "High") {
       targetWeight = roundToGymIncrement(lastWeight);
       targetReps = rawReps;
-      rationale = `⚠️ <b>Fatigue Flag:</b> Holding weight steady at ${targetWeight}kg. Focus on clean execution within your 8–12 range.`;
+      rationale = `⚠️ <b>Fatigue Flag:</b> Holding weight steady at ${targetWeight}kg. Focus on clean execution within your target range.`;
     } else if (chickenLegActive && isLower && last.rir <= 2) {
       targetWeight = roundToGymIncrement(lastWeight + 5);
-      targetReps = Array(targetSets).fill(8).join('/');
-      rationale = `⚖️ <strong class="text-warning">Auto-Balancing Boost:</strong> Lagging lower body detected! Forcing +5kg plate jump to <b>${targetWeight}kg</b> (Target: 8–12 reps).`;
+      targetReps = Array(targetSets).fill(minRepTarget).join('/');
+      rationale = `⚖️ <strong class="text-warning">Auto-Balancing Boost:</strong> Lagging lower body detected! Forcing +5kg plate jump to <b>${targetWeight}kg</b> (Target: ${minRepTarget}–${maxRepCeiling} reps).`;
     } else if (hitCeilingAcrossAllSets && last.rir <= 2) {
-      // 🚀 DOUBLE PROGRESSION TRIGGER: Hit 12 reps on all sets -> Add weight, drop reps to bottom of range (8)
+      // 🚀 DOUBLE PROGRESSION TRIGGER: Hit ceiling reps on all sets -> Add weight, drop reps to bottom of range
       targetWeight = roundToGymIncrement(lastWeight + 5);
-      targetReps = Array(targetSets).fill(8).join('/');
-      rationale = `🚀 <strong class="text-success">Rep Ceiling Reached!</strong> You hit 12+ reps across all sets last time. Stepping up to <b>${targetWeight}kg</b> (Resetting reps to 8–12 range).`;
+      targetReps = Array(targetSets).fill(minRepTarget).join('/');
+      rationale = `🚀 <strong class="text-success">Rep Ceiling Reached!</strong> You hit ${maxRepCeiling}+ reps across all sets last time. Stepping up to <b>${targetWeight}kg</b> (Resetting reps to ${minRepTarget}–${maxRepCeiling} range).`;
     } else {
-      // 📌 CONSOLIDATION: Build reps up towards 12
+      // 📌 CONSOLIDATION: Build reps up towards ceiling
       targetWeight = roundToGymIncrement(lastWeight);
       targetReps = rawReps;
-      rationale = `📌 <strong class="text-warning">Rep-Range Progression:</strong> Hold at ${targetWeight}kg. Push your reps towards <b>12/12/12</b> before taking the 5kg jump.`;
+      rationale = `📌 <strong class="text-warning">Rep-Range Progression:</strong> Hold at ${targetWeight}kg. Push your reps towards <b>${maxRepCeiling}/${maxRepCeiling}/${maxRepCeiling}</b> before taking the 5kg jump.`;
     }
 
     currentPrescription = { weight: targetWeight, sets: targetSets, reps: targetReps, rir: last.rir <= 1 ? 2 : last.rir };
@@ -576,7 +598,7 @@ function updateProgressionAdvice() {
   let plateHint = currentPrescription.weight > 0 ? ` <br><small class="text-warning">🔩 Plates: ${calculatePlates(currentPrescription.weight)}</small>` : '';
 
   let html = `
-    <div class="mb-1 text-xtreme-gold">🎯 <b>Prescribed Target:</b> ${currentPrescription.weight} kg | ${currentPrescription.sets} sets | Reps: [${currentPrescription.reps}]${plateHint}</div>
+    <div class="mb-1 text-xtreme-gold">🎯 <b>Prescribed Target (${compound ? 'Compound 6-10' : 'Isolation 10-15'}):</b> ${currentPrescription.weight} kg | ${currentPrescription.sets} sets | Reps: [${currentPrescription.reps}]${plateHint}</div>
     <div class="text-light mt-1">${rationale}</div>
   `;
   box.innerHTML = html;
