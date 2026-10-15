@@ -6,7 +6,7 @@ let currentPrescription = null;
 let restTimerInterval = null;
 let myProgressChart = null;
 let pendingDeleteRowIndex = null;
-let isPlateauBreakerActive = false; // Toggle for plateau reset mode
+let isPlateauBreakerActive = false;
 
 // ==========================================
 // 🏋️ OPTIMIZED EXERCISE SEQUENCE MAP
@@ -106,7 +106,7 @@ function initApp() {
 
   updateExerciseDropdown(true); 
   evaluatePhysiqueBalance();
-  renderWeeklyVolumeTracker(); // <--- ADDED HERE!
+  renderWeeklyVolumeTracker();
   renderHistoryList();
   initChartDropdown();
 }
@@ -303,9 +303,6 @@ function isChickenLegRiskActive() {
   return (avgLower > 0 && avgUpper > 0 && avgLower < avgUpper * 1.1);
 }
 
-// ==========================================
-// 🔩 PLATE CALCULATOR LOGIC
-// ==========================================
 function calculatePlates(targetWeight) {
   const barSelect = document.getElementById('barbellType');
   const barbell = barSelect ? parseFloat(barSelect.value) : 20;
@@ -341,9 +338,6 @@ function calculatePlates(targetWeight) {
   return `🏋️ ${plateStr} on ${barNotice} = <b>${loadableWeight}kg total</b>`;
 }
 
-// ==========================================
-// 📈 CHART VISUAL TREND ENGINE
-// ==========================================
 function initChartDropdown() {
   const select = document.getElementById('chartExerciseSelect');
   if (!select) return;
@@ -411,12 +405,12 @@ function renderProgressChart() {
       datasets: [{
         label: 'Working Weight (kg)',
         data: weights,
-        borderColor: '#d32f2f',
-        backgroundColor: 'rgba(211, 47, 47, 0.1)',
+        borderColor: '#C8102E',
+        backgroundColor: 'rgba(200, 16, 46, 0.1)',
         borderWidth: 2,
         fill: true,
         tension: 0.2,
-        pointBackgroundColor: '#ffb300',
+        pointBackgroundColor: '#FFE500',
         pointRadius: 4
       }]
     },
@@ -428,12 +422,12 @@ function renderProgressChart() {
       },
       scales: {
         x: {
-          ticks: { color: '#94a3b8', font: { size: 10 } },
-          grid: { color: '#334155' }
+          ticks: { color: '#9CA3AF', font: { size: 10 } },
+          grid: { color: '#27272A' }
         },
         y: {
-          ticks: { color: '#94a3b8', font: { size: 10 } },
-          grid: { color: '#334155' },
+          ticks: { color: '#9CA3AF', font: { size: 10 } },
+          grid: { color: '#27272A' },
           beginAtZero: true
         }
       }
@@ -577,9 +571,6 @@ function cancelDeletePrompt() {
   if (banner) banner.remove();
 }
 
-// ==========================================
-// 🚀 COMPOUND VS ISOLATION CLASSIFICATION ENGINE
-// ==========================================
 function isCompoundExercise(exerciseName) {
   let nameLower = exerciseName.toLowerCase();
   return nameLower.includes('squat') || 
@@ -593,9 +584,6 @@ function isCompoundExercise(exerciseName) {
          nameLower.includes('lunge');
 }
 
-// ==========================================
-// 🚀 PROFESSIONAL DOUBLE PROGRESSION ENGINE (Sets, Reps & Weight)
-// ==========================================
 function updateProgressionAdvice() {
   const exercise = document.getElementById('exerciseSelect').value.trim();
   let last = globalData.lastLogs[exercise] || null;
@@ -610,7 +598,6 @@ function updateProgressionAdvice() {
   const phase = document.getElementById('phase').value;
 
   const box = document.getElementById('suggestionText');
-  
   const compound = isCompoundExercise(exercise);
   
   let defaultSets = compound ? 4 : 3;
@@ -641,13 +628,12 @@ function updateProgressionAdvice() {
     targetSets = lastSets;
 
     if (isPlateauBreakerActive) {
-      // 🔄 PLATEAU BREAKER RESET: Force sets to default, drop weight to ~80% of last logged weight, reset reps to bottom of range
       targetSets = compound ? 4 : 3;
       let resetRaw = lastWeight * 0.8;
       targetWeight = roundToGymIncrement(resetRaw);
       if (targetWeight <= 0) targetWeight = 5;
       targetReps = Array(targetSets).fill(minRepTarget).join('/');
-      rationale = `🔄 <strong class="text-danger">Plateau Breaker Active:</strong> Resetting sets to ${targetSets}, weight to ~80% (${targetWeight}kg), and reps to [${targetReps}]. Build momentum cleanly back past your plateau!`;
+      rationale = `🔄 <strong class="text-danger">Plateau Breaker Active:</strong> Resetting sets to ${targetSets}, weight to ~80% (${targetWeight}kg), and reps to [${targetReps}].`;
     } else if (phase.includes("Deload")) {
       targetWeight = Math.max(0, targetWeight - 5);
       targetSets = Math.max(2, targetSets - 1);
@@ -664,15 +650,15 @@ function updateProgressionAdvice() {
     } else if (chickenLegActive && isLower && last.rir <= 2) {
       targetWeight = roundToGymIncrement(lastWeight + 5);
       targetReps = Array(targetSets).fill(minRepTarget).join('/');
-      rationale = `⚖️ <strong class="text-warning">Auto-Balancing Boost:</strong> Lagging lower body detected! Forcing +5kg plate jump to <b>${targetWeight}kg</b> (Target: ${minRepTarget}–${maxRepCeiling} reps).`;
+      rationale = `⚖️ <strong class="text-warning">Auto-Balancing Boost:</strong> Lagging lower body detected! Forcing +5kg plate jump to <b>${targetWeight}kg</b>.`;
     } else if (hitCeilingAcrossAllSets && last.rir <= 2) {
       targetWeight = roundToGymIncrement(lastWeight + 5);
       targetReps = Array(targetSets).fill(minRepTarget).join('/');
-      rationale = `🚀 <strong class="text-success">Rep Ceiling Reached!</strong> You hit ${maxRepCeiling}+ reps across all sets last time. Stepping up to <b>${targetWeight}kg</b> (Resetting reps to ${minRepTarget}–${maxRepCeiling} range).`;
+      rationale = `🚀 <strong class="text-success">Rep Ceiling Reached!</strong> Stepping up to <b>${targetWeight}kg</b>.`;
     } else {
       targetWeight = roundToGymIncrement(lastWeight);
       targetReps = rawReps;
-      rationale = `📌 <strong class="text-warning">Rep-Range Progression:</strong> Hold at ${targetWeight}kg. Push your reps towards <b>${maxRepCeiling}</b> across all sets before taking the 5kg jump.`;
+      rationale = `📌 <strong class="text-warning">Rep-Range Progression:</strong> Hold at ${targetWeight}kg. Push your reps towards <b>${maxRepCeiling}</b>.`;
     }
 
     currentPrescription = { weight: targetWeight, sets: targetSets, reps: targetReps, rir: last.rir <= 1 ? 2 : last.rir };
@@ -698,11 +684,9 @@ function updateProgressionAdvice() {
         ${compound ? 'Compound (6–10)' : 'Isolation (10–15)'}
       </span>
     </div>
-    
     <div class="text-light mt-1" style="font-size: 0.825rem;">
       ${rationale}
     </div>
-    
     ${plateHint}
   `;
   box.innerHTML = html;
@@ -720,9 +704,6 @@ function applyPrescription() {
   setTimeout(() => { btn.textContent = '📥 Apply Target'; }, 1500);
 }
 
-// ==========================================
-// ⏱️ REST TIMER LOGIC
-// ==========================================
 function startRestTimer(seconds) {
   clearInterval(restTimerInterval);
   const display = document.getElementById('timerDisplay');
@@ -784,7 +765,7 @@ document.getElementById('workoutForm').addEventListener('submit', function(e) {
   .then(res => res.json())
   .then(res => {
     showToast(res.message || "Workout saved successfully!");
-    isPlateauBreakerActive = false; // Reset toggle after saving
+    isPlateauBreakerActive = false;
     updatePlateauBreakerUI();
     cancelEdit(); 
     fetchData();  
@@ -800,38 +781,6 @@ document.getElementById('workoutForm').addEventListener('submit', function(e) {
   });
 });
 
-// ==========================================
-// 🔍 WORKOUT QA & DIAGNOSTIC CONSOLE TOOL
-// ==========================================
-function runWorkoutQA() {
-  console.group("🏋️ Xtreme Overload App - QA Diagnostics");
-  
-  console.log("1️⃣ Global Data Loaded:", globalData);
-  console.log("2️⃣ Current Phase:", globalData.currentPhase);
-  console.log("3️⃣ Total History Entries:", globalData.history ? globalData.history.length : 0);
-  
-  const currentEx = document.getElementById('exerciseSelect') ? document.getElementById('exerciseSelect').value : "None selected";
-  console.log("4️⃣ Currently Selected Exercise:", currentEx);
-  
-  let lastLog = globalData.lastLogs ? globalData.lastLogs[currentEx] : null;
-  console.log("5️⃣ Last Log for Selected Exercise:", lastLog);
-  
-  console.log("6️⃣ Active Current Prescription Object:", currentPrescription);
-  
-  console.groupEnd();
-  
-  return {
-    phase: globalData.currentPhase,
-    selectedExercise: currentEx,
-    lastLog: lastLog,
-    prescription: currentPrescription,
-    historyCount: globalData.history ? globalData.history.length : 0
-  };
-}
-
-// ==========================================
-// 📊 WEEKLY VOLUME TRACKER ENGINE
-// ==========================================
 const EXERCISE_MUSCLE_MAP = {
   "Bench Press": "Chest",
   "Incline Dumbell Press": "Chest",
@@ -865,7 +814,7 @@ function renderWeeklyVolumeTracker() {
   if (!container) return;
 
   if (badge && globalData.cycleWeek) {
-    badge.textContent = `Cycle Week ${globalData.cycleWeek} (${globalData.currentPhase || 'Accumulation'})`;
+    badge.textContent = `Cycle Week ${globalData.cycleWeek} (${globalData.currentPhase || 'Intensification'})`;
   }
 
   const history = globalData.history || [];
@@ -898,7 +847,7 @@ function renderWeeklyVolumeTracker() {
 
   let totalActiveSets = Object.values(volumeMap).reduce((a, b) => a + b, 0);
   if (totalActiveSets === 0 && history.length > 0) {
-    history.slice(0, 12).forEach(item => {
+    history.slice(0, 15).forEach(item => {
       let muscle = EXERCISE_MUSCLE_MAP[item.exercise];
       let sets = parseInt(item.sets) || 0;
       if (muscle && volumeMap[muscle] !== undefined) {
@@ -915,28 +864,31 @@ function renderWeeklyVolumeTracker() {
     let sets = volumeMap[muscle];
     let percentage = Math.min(100, Math.round((sets / targetMax) * 100));
     
-    let statusText = 'Optimal';
-    let barColor = 'bg-success';
-    let textClass = 'text-success';
+    let statusText = '(Optimal)';
+    let barClass = 'progress-bar-crimson';
+    let textClass = 'status-label-optimal';
 
     if (sets < targetMin) {
-      statusText = 'Under-Target';
-      barColor = 'bg-warning';
-      textClass = 'text-warning';
+      statusText = '(Under-Target)';
+      barClass = 'progress-bar-yellow';
+      textClass = 'status-label-under';
     } else if (sets > targetMax) {
-      statusText = 'High Fatigue Warning';
-      barColor = 'bg-danger';
-      textClass = 'text-danger';
+      statusText = '(High Fatigue Warning)';
+      barClass = 'progress-bar-crimson';
+      textClass = 'status-label-over';
     }
 
     html += `
       <div class="mb-3">
-        <div class="d-flex justify-content-between small text-light mb-1">
-          <span>${muscle}</span>
-          <span class="fw-bold ${textClass}">${sets} / ${targetMax} sets <small class="fw-normal text-muted">(${statusText})</small></span>
+        <div class="d-flex justify-content-between align-items-center mb-1">
+          <span class="fw-bold text-white fs-6">${muscle}</span>
+          <div>
+            <span class="fw-bold text-white fs-6">${sets} / ${targetMax} sets</span>
+            <span class="status-label ${textClass} ms-1" style="font-size: 0.78rem;">${statusText}</span>
+          </div>
         </div>
-        <div class="progress bg-dark" style="height: 6px; border: 1px solid #2a2f3d;">
-          <div class="progress-bar ${barColor}" role="progressbar" style="width: ${percentage}%;"></div>
+        <div class="progress-bar-container">
+          <div class="${barClass}" style="width: ${percentage}%;"></div>
         </div>
       </div>
     `;
@@ -945,8 +897,8 @@ function renderWeeklyVolumeTracker() {
   let laggingMuscle = Object.keys(volumeMap).reduce((minMuscle, m) => volumeMap[m] < volumeMap[minMuscle] ? m : minMuscle, Object.keys(volumeMap)[0]);
 
   html += `
-    <div class="pt-2 border-top border-secondary border-opacity-25 text-light small" style="font-size: 0.8rem;">
-      💡 <b>Coach Tip:</b> ${laggingMuscle} has the lowest volume this week (${volumeMap[laggingMuscle]} sets). Consider prioritizing it on your next split day.
+    <div class="pt-2 mt-3 border-top border-secondary border-opacity-25 text-light small" style="font-size: 0.8rem; line-height: 1.4;">
+      💡 <b class="text-xtreme-gold">Coach Tip:</b> ${laggingMuscle} has the lowest volume this week (${volumeMap[laggingMuscle]} sets). Consider prioritizing it on your next split day.
     </div>
   `;
 
