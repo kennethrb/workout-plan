@@ -27,19 +27,19 @@
       </div>
 
       <!-- 📊 Weekly Muscle Volume Tracker -->
-      <div class="card shadow-sm mb-4" style="background: linear-gradient(145deg, #181b24, #12141c); border-left: 4px solid #ffb300 !important;">
-        <div class="card-body p-3">
+      <div class="card shadow-sm mb-4" style="border-left: 4px solid var(--xtreme-yellow) !important;">
+        <div class="card-body p-1">
           
-          <!-- Card Header -->
-          <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom border-secondary border-opacity-25">
+          <!-- Fixed Flex Header Grid -->
+          <div class="tracker-header-grid mb-3 pb-2 border-bottom border-secondary border-opacity-25">
             <div class="d-flex align-items-center gap-2">
-              <span class="fs-6">📊</span>
-              <h6 class="text-xtreme-gold fw-bold mb-0 text-uppercase" style="letter-spacing: 0.5px; font-size: 0.825rem;">Weekly Volume Tracker (10–20 Sets Target)</h6>
+              <span class="fs-5">📊</span>
+              <h6 class="tracker-title">Weekly Volume Tracker <span class="text-muted fw-normal">(10–20 Sets Target)</span></h6>
             </div>
-            <span class="badge bg-dark border border-warning text-xtreme-gold px-2 py-1" id="cycleWeekBadge" style="font-size: 0.7rem;">Cycle Week 1</span>
+            <span class="badge bg-dark border border-warning text-xtreme-gold px-2 py-1" id="cycleWeekBadge" style="font-size: 0.725rem;">Cycle Week 3</span>
           </div>
 
-          <!-- Dynamic Volume Container -->
+          <!-- Volume Progress Bars Container -->
           <div id="volumeTrackerContainer">
             <p class="text-muted small mb-0">Calculating weekly volume...</p>
           </div>
@@ -48,19 +48,19 @@
       </div>
 
       <!-- ⏱️ Rest Timer Widget -->
-      <div id="restTimerWidget" class="card shadow-sm mb-4" style="display: none; border: 1px solid #ffb300; background-color: rgba(21, 24, 33, 0.95);">
+      <div id="restTimerWidget" class="card shadow-sm mb-4" style="display: none; border: 1px solid var(--xtreme-yellow); background-color: rgba(24, 24, 27, 0.95);">
         <div class="card-body text-center py-3">
           <div class="d-flex align-items-center justify-content-center gap-2 mb-2">
             <span class="fs-5">⏳</span>
             <h6 class="text-xtreme-gold fw-bold mb-0" style="letter-spacing: 0.5px;">Rest Period Countdown</h6>
           </div>
           
-          <div id="timerDisplay" class="display-5 fw-bold text-xtreme-gold my-2" style="font-family: monospace; text-shadow: 0 0 10px rgba(255, 179, 0, 0.3);">
+          <div id="timerDisplay" class="display-5 fw-bold text-xtreme-gold my-2" style="font-family: monospace; text-shadow: 0 0 10px rgba(255, 229, 0, 0.3);">
             1:30
           </div>
 
           <div class="d-flex justify-content-center gap-2 mt-3">
-            <button type="button" class="btn btn-sm btn-outline-warning fw-semibold px-3" onclick="startRestTimer(90)" style="border-color: #ffb300; color: #ffb300;">
+            <button type="button" class="btn btn-sm btn-outline-warning fw-semibold px-3" onclick="startRestTimer(90)" style="border-color: var(--xtreme-yellow); color: var(--xtreme-yellow);">
               + 90s Rest
             </button>
             <button type="button" class="btn btn-sm btn-outline-secondary fw-semibold px-3 text-light" onclick="stopRestTimer()">
@@ -76,7 +76,7 @@
         <form id="workoutForm">
           
           <!-- Coach Readiness, Barbell & Auto Phase Section -->
-          <div class="p-3 mb-3 rounded-3" style="background-color: rgba(211, 47, 47, 0.04); border: 1px dashed #2a2f3d;">
+          <div class="p-3 mb-3 rounded-3" style="background-color: rgba(200, 16, 46, 0.04); border: 1px dashed var(--xtreme-card-border);">
             <div class="d-flex justify-content-between align-items-center mb-2">
               <h6 class="text-xtreme-red fw-bold mb-0">🤖 Coach Readiness & Phase</h6>
               <span class="badge bg-secondary text-light fw-normal" style="font-size: 0.75rem;">5 kg Plate Mode</span>
@@ -144,7 +144,7 @@
           </div>
 
           <!-- Prescriptive Coach Advisor Box -->
-          <div class="card shadow-sm mb-4 border-0" style="background: linear-gradient(145deg, #181b24, #12141c); border-left: 4px solid #d32f2f !important;">
+          <div class="card shadow-sm mb-4 border-0" style="background: linear-gradient(145deg, #18181B, #121215); border-left: 4px solid var(--xtreme-crimson) !important;">
             <div class="card-body p-3">
               
               <!-- Card Header -->
@@ -157,7 +157,7 @@
                   <button type="button" class="btn btn-sm btn-outline-danger fw-semibold px-2 py-1" id="plateauBreakerBtn" style="font-size: 0.725rem; border-radius: 6px;" onclick="togglePlateauBreaker()" title="Reset stalled exercise to 80% weight">
                     🔄 Plateau Breaker
                   </button>
-                  <button type="button" class="btn btn-sm btn-warning fw-bold text-dark px-3 py-1" id="applyPrescriptionBtn" style="font-size: 0.725rem; border-radius: 6px; background-color: #ffb300; border: none;" onclick="applyPrescription()">
+                  <button type="button" class="btn btn-sm btn-warning fw-bold text-dark px-3 py-1" id="applyPrescriptionBtn" style="font-size: 0.725rem; border-radius: 6px; background-color: var(--xtreme-yellow); border: none;" onclick="applyPrescription()">
                     📥 Apply Target
                   </button>
                 </div>
@@ -227,7 +227,7 @@
         <div class="mb-3">
           <div class="input-group">
             <input type="text" class="form-control" id="historySearch" placeholder="🔍 Search exercise, day, or date...">
-            <button class="btn btn-outline-secondary text-light border-secondary px-3" type="button" id="clearSearchBtn" onclick="clearHistorySearch()" style="display: none; background-color: #0c0e12;">✕ Clear</button>
+            <button class="btn btn-outline-secondary text-light border-secondary px-3" type="button" id="clearSearchBtn" onclick="clearHistorySearch()" style="display: none; background-color: #121215;">✕ Clear</button>
           </div>
         </div>
         <div id="historyContainer">
