@@ -1,25 +1,20 @@
 :root {
-  --bg-color: #0c0e12;
-  --card-bg: #151821;
-  --card-border: #242834;
-  --text-main: #ffffff;
-  --text-muted: #94a3b8;
-  --text-bright: #f8fafc;
-  --primary: #d32f2f;
-  --primary-hover: #b71c1c;
-  --accent-gold: #ffb300;
-  --success: #2e7d32;
-  --warning: #f57c00;
-  --danger: #c62828;
-  --radius-lg: 16px;
-  --radius-md: 10px;
+  --xtreme-bg: #0F0F10;
+  --xtreme-surface: #18181B;
+  --xtreme-card-border: #27272A;
+  --xtreme-crimson: #C8102E;
+  --xtreme-crimson-hover: #A00D24;
+  --xtreme-yellow: #FFE500;
+  --xtreme-text-main: #FFFFFF;
+  --xtreme-text-muted: #71717A;
+  --radius-sharp: 10px;
 }
 
 body {
-  background-color: var(--bg-color);
-  color: var(--text-main);
+  background-color: var(--xtreme-bg);
+  color: var(--xtreme-text-main);
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  padding-bottom: 80px;
+  padding-bottom: 96px;
   margin: 0;
   -webkit-tap-highlight-color: transparent;
   -webkit-font-smoothing: antialiased;
@@ -28,135 +23,116 @@ body {
 .app-container {
   max-width: 540px;
   margin: 0 auto;
-  padding: 20px 16px;
+  padding: 24px 16px;
 }
 
+/* Brand Header Styling */
 .brand-header {
   text-align: center;
-  margin-bottom: 24px;
+  margin-bottom: 28px;
 }
 
 .brand-header h2 {
-  font-size: 1.75rem;
-  font-weight: 800;
-  letter-spacing: -0.03em;
-  color: var(--text-main);
+  font-size: 1.85rem;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+  color: var(--xtreme-text-main);
   margin: 0;
 }
 
 .brand-header h2 span {
-  color: var(--primary);
+  color: var(--xtreme-crimson);
 }
 
+/* High-Performance Athletic Cards */
 .card {
-  background-color: var(--card-bg) !important;
-  border: 1px solid var(--card-border) !important;
-  border-radius: var(--radius-lg);
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.6);
-  color: var(--text-main) !important;
-  padding: 22px;
+  background-color: var(--xtreme-surface) !important;
+  border: 1px solid var(--xtreme-card-border) !important;
+  border-radius: var(--radius-sharp);
+  box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.7);
+  color: var(--xtreme-text-main) !important;
+  padding: 20px;
   margin-bottom: 20px;
 }
 
-.form-label {
-  font-weight: 600;
-  font-size: 0.85rem;
+/* Section Headings - Aggressive & Uppercase */
+h4, h6 {
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: #cbd5e1 !important;
-  margin-bottom: 8px;
+  font-weight: 800;
+}
+
+/* Form Controls & Minimum 44px Touch Targets */
+.form-label {
+  font-weight: 700;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--xtreme-text-muted) !important;
+  margin-bottom: 6px;
 }
 
 .form-control, .form-select {
-  background-color: #0c0e12 !important;
-  color: var(--text-main) !important;
-  border: 1px solid #2a2f3d !important;
-  border-radius: var(--radius-md);
+  background-color: #121215 !important;
+  color: var(--xtreme-text-main) !important;
+  border: 1px solid #27272A !important;
+  border-radius: 8px;
   padding: 12px 14px;
   font-size: 1rem;
-  min-height: 48px;
+  min-height: 48px; /* Exceeds 44px touch target rule */
 }
 
 .form-control::placeholder {
-  color: #64748b !important;
-  opacity: 1;
+  color: #52525B !important;
 }
 
 .form-control:focus, .form-select:focus {
-  border-color: var(--primary) !important;
-  box-shadow: 0 0 0 3px rgba(211, 47, 47, 0.25) !important;
-  color: var(--text-main) !important;
-  background-color: #0c0e12 !important;
+  border-color: var(--xtreme-crimson) !important;
+  box-shadow: 0 0 0 3px rgba(200, 16, 46, 0.25) !important;
+  background-color: #121215 !important;
+  color: var(--xtreme-text-main) !important;
 }
 
-/* Advisor Box Improvements */
-.advisor-box {
-  background-color: rgba(211, 47, 47, 0.08);
-  border: 1px solid rgba(211, 47, 47, 0.3);
-  border-left: 4px solid var(--primary);
+/* Primary Action Buttons */
+.btn-primary {
+  background-color: var(--xtreme-crimson);
+  border: none;
+  border-radius: 8px;
   padding: 14px;
-  border-radius: var(--radius-md);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 1rem;
+  min-height: 50px;
+  box-shadow: 0 6px 16px rgba(200, 16, 46, 0.4);
+  transition: background-color 0.15s ease, transform 0.1s ease;
+}
+
+.btn-primary:hover, .btn-primary:active {
+  background-color: var(--xtreme-crimson-hover);
+  transform: translateY(-1px);
+}
+
+/* Advisor & Balance Callout Boxes */
+.advisor-box {
+  background-color: rgba(200, 16, 46, 0.06);
+  border: 1px solid rgba(200, 16, 46, 0.25);
+  border-left: 4px solid var(--xtreme-crimson);
+  padding: 14px;
+  border-radius: 8px;
   margin-bottom: 20px;
-  color: var(--text-bright);
 }
 
 .balance-box {
-  background-color: rgba(255, 179, 0, 0.08);
-  border: 1px solid rgba(255, 179, 0, 0.3);
-  border-left: 4px solid var(--accent-gold);
+  background-color: rgba(255, 229, 0, 0.05);
+  border: 1px solid rgba(255, 229, 0, 0.25);
+  border-left: 4px solid var(--xtreme-yellow);
   padding: 14px;
-  border-radius: var(--radius-md);
+  border-radius: 8px;
   margin-bottom: 20px;
-  color: var(--text-bright);
 }
 
-/* History List High Contrast Styling */
-.list-group-item {
-  background-color: transparent !important;
-  border-color: #242834 !important;
-  color: var(--text-main) !important;
-}
-
-.list-group-item .text-muted {
-  color: #94a3b8 !important;
-}
-
-.btn-primary {
-  background-color: var(--primary);
-  border: none;
-  border-radius: var(--radius-md);
-  padding: 14px;
-  font-weight: 700;
-  font-size: 1rem;
-  min-height: 50px;
-  box-shadow: 0 4px 12px rgba(211, 47, 47, 0.4);
-  transition: background-color 0.2s ease;
-}
-
-.btn-primary:hover {
-  background-color: var(--primary-hover);
-}
-
-/* Inline Delete Confirmation Box Fix */
-#deleteConfirmBanner {
-  border-radius: var(--radius-md);
-  border: 1px solid var(--primary) !important;
-  background-color: rgba(211, 47, 47, 0.15) !important;
-}
-
-#loading {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 60vh;
-}
-
-/* --- Xtreme Fitness Brand Color Extensions --- */
-.text-xtreme-red { color: #d32f2f !important; }
-.text-xtreme-gold { color: #ffb300 !important; }
-.bg-xtreme-gold-soft { background-color: rgba(255, 179, 0, 0.08) !important; border-color: rgba(255, 179, 0, 0.3) !important; }
-.border-xtreme-gold { border-color: #ffb300 !important; }
-.border-xtreme-red { border-color: #d32f2f !important; }
-/* Force Bootstrap text-primary to use Xtreme Fitness Red */
-.text-primary { color: var(--primary) !important; }
+/* Utility Brand Extensions */
+.text-xtreme-red { color: var(--xtreme-crimson) !important; }
+.text-xtreme-gold { color: var(--xtreme-yellow) !important; }
