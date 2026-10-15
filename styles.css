@@ -6,8 +6,10 @@
   --xtreme-crimson-hover: #A00D24;
   --xtreme-yellow: #FFE500;
   --xtreme-text-main: #FFFFFF;
-  --xtreme-text-muted: #71717A;
-  --radius-sharp: 10px;
+  --xtreme-text-muted: #9CA3AF;
+  --xtreme-text-bright: #F8FAFC;
+  --radius-lg: 12px;
+  --radius-md: 8px;
 }
 
 body {
@@ -26,44 +28,42 @@ body {
   padding: 24px 16px;
 }
 
-/* Brand Header Styling */
 .brand-header {
   text-align: center;
   margin-bottom: 28px;
 }
 
 .brand-header h2 {
-  font-size: 1.85rem;
+  font-size: 1.5rem;
   font-weight: 900;
-  letter-spacing: -0.02em;
+  letter-spacing: 0.02em;
   text-transform: uppercase;
   color: var(--xtreme-text-main);
   margin: 0;
+  line-height: 1.2;
 }
 
 .brand-header h2 span {
   color: var(--xtreme-crimson);
+  display: block;
 }
 
-/* High-Performance Athletic Cards */
 .card {
   background-color: var(--xtreme-surface) !important;
   border: 1px solid var(--xtreme-card-border) !important;
-  border-radius: var(--radius-sharp);
+  border-radius: var(--radius-lg);
   box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.7);
   color: var(--xtreme-text-main) !important;
   padding: 20px;
   margin-bottom: 20px;
 }
 
-/* Section Headings - Aggressive & Uppercase */
 h4, h6 {
   text-transform: uppercase;
   letter-spacing: 0.05em;
   font-weight: 800;
 }
 
-/* Form Controls & Minimum 44px Touch Targets */
 .form-label {
   font-weight: 700;
   font-size: 0.8rem;
@@ -76,29 +76,59 @@ h4, h6 {
 .form-control, .form-select {
   background-color: #121215 !important;
   color: var(--xtreme-text-main) !important;
-  border: 1px solid #27272A !important;
-  border-radius: 8px;
+  border: 1px solid var(--xtreme-card-border) !important;
+  border-radius: var(--radius-md);
   padding: 12px 14px;
   font-size: 1rem;
-  min-height: 48px; /* Exceeds 44px touch target rule */
+  min-height: 48px;
 }
 
 .form-control::placeholder {
   color: #52525B !important;
+  opacity: 1;
 }
 
 .form-control:focus, .form-select:focus {
   border-color: var(--xtreme-crimson) !important;
   box-shadow: 0 0 0 3px rgba(200, 16, 46, 0.25) !important;
+  color: var(--xtreme-text-main) !important;
   background-color: #121215 !important;
+}
+
+.advisor-box {
+  background-color: rgba(200, 16, 46, 0.06);
+  border: 1px solid rgba(200, 16, 46, 0.25);
+  border-left: 4px solid var(--xtreme-crimson);
+  padding: 14px;
+  border-radius: var(--radius-md);
+  margin-bottom: 20px;
+  color: var(--xtreme-text-bright);
+}
+
+.balance-box {
+  background-color: rgba(255, 229, 0, 0.05);
+  border: 1px solid rgba(255, 229, 0, 0.25);
+  border-left: 4px solid var(--xtreme-yellow);
+  padding: 14px;
+  border-radius: var(--radius-md);
+  margin-bottom: 20px;
+  color: var(--xtreme-text-bright);
+}
+
+.list-group-item {
+  background-color: transparent !important;
+  border-color: var(--xtreme-card-border) !important;
   color: var(--xtreme-text-main) !important;
 }
 
-/* Primary Action Buttons */
+.list-group-item .text-muted {
+  color: var(--xtreme-text-muted) !important;
+}
+
 .btn-primary {
   background-color: var(--xtreme-crimson);
   border: none;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   padding: 14px;
   font-weight: 800;
   text-transform: uppercase;
@@ -114,25 +144,75 @@ h4, h6 {
   transform: translateY(-1px);
 }
 
-/* Advisor & Balance Callout Boxes */
-.advisor-box {
-  background-color: rgba(200, 16, 46, 0.06);
-  border: 1px solid rgba(200, 16, 46, 0.25);
-  border-left: 4px solid var(--xtreme-crimson);
-  padding: 14px;
-  border-radius: 8px;
-  margin-bottom: 20px;
+#deleteConfirmBanner {
+  border-radius: var(--radius-md);
+  border: 1px solid var(--xtreme-crimson) !important;
+  background-color: rgba(200, 16, 46, 0.15) !important;
 }
 
-.balance-box {
-  background-color: rgba(255, 229, 0, 0.05);
-  border: 1px solid rgba(255, 229, 0, 0.25);
-  border-left: 4px solid var(--xtreme-yellow);
-  padding: 14px;
-  border-radius: 8px;
-  margin-bottom: 20px;
+#loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
 }
 
-/* Utility Brand Extensions */
+/* Tracker Header Grid */
+.tracker-header-grid {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.tracker-title {
+  font-size: 0.85rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--xtreme-yellow);
+  margin: 0;
+  line-height: 1.3;
+}
+
+/* High Contrast Progress Bars & Status Labels */
+.progress-bar-container {
+  background-color: #121215;
+  border: 1px solid var(--xtreme-card-border);
+  border-radius: 4px;
+  height: 8px;
+  overflow: hidden;
+}
+
+.progress-bar-crimson {
+  background-color: var(--xtreme-crimson) !important;
+  height: 100%;
+}
+
+.progress-bar-yellow {
+  background-color: var(--xtreme-yellow) !important;
+  height: 100%;
+}
+
+.status-label {
+  font-weight: 700;
+  font-size: 0.825rem;
+}
+
+.status-label-under {
+  color: #FBBF24 !important;
+}
+
+.status-label-optimal {
+  color: #FFFFFF !important;
+}
+
+.status-label-over {
+  color: var(--xtreme-crimson) !important;
+}
+
 .text-xtreme-red { color: var(--xtreme-crimson) !important; }
 .text-xtreme-gold { color: var(--xtreme-yellow) !important; }
+.text-primary { color: var(--xtreme-crimson) !important; }
