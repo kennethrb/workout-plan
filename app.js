@@ -7,6 +7,44 @@ let restTimerInterval = null;
 let myProgressChart = null;
 let pendingDeleteRowIndex = null;
 
+// ==========================================
+// 🏋️ OPTIMIZED EXERCISE SEQUENCE MAP
+// ==========================================
+const WORKOUT_SEQUENCES = {
+  "Upper Strength": [
+    "Bench Press",
+    "Barbell Row",
+    "Overhead Press",
+    "Pull-ups / Lat Pulldown",
+    "Plank"
+  ],
+  "Lower Strength": [
+    "Back Squat",
+    "Romanian Deadlift",
+    "Walking Lunges",
+    "Calf Raises",
+    "Hanging Leg Raises"
+  ],
+  "Upper Hypertrophy": [
+    "Incline Dumbell Press",
+    "Seated Cable Row",
+    "Dumbell Shoulder Press",
+    "Lateral Raises",
+    "Bicep Curl",
+    "Tricep Pushdown",
+    "Face Pull"
+  ],
+  "Lower Hypertrophy": [
+    "Deadlift",
+    "Front Squat / Leg Press",
+    "Bulgarian Split Squat",
+    "Hamstring Curl",
+    "Hip Thrust / Glute Bridge",
+    "Ab Wheel",
+    "Cable Woodchop"
+  ]
+};
+
 window.addEventListener('DOMContentLoaded', function() {
   fetchData();
 });
@@ -102,9 +140,23 @@ function updateExerciseDropdown(isInitialLoad = false) {
   const select = document.getElementById('exerciseSelect');
   select.innerHTML = '';
 
-  let exercisesForDay = (globalData.workoutMap && globalData.workoutMap[workoutDay]) 
+  let exercisesForDay = [];
+  
+  // Use pre-sorted sequence if available, fallback to global workoutMap or exercises
+  if (WORKOUT_SEQUENCES[workoutDay]) {
+    let availableFromMap = (globalData.workoutMap && globalData.workoutMap[workoutDay]) ? globalData.workoutMap[workoutDay] : globalData.exercises;
+    // Filter sequence to only include exercises that exist in the database/map
+    exercisesForDay = WORKOUT_SEQUENCES[workoutDay].filter(ex => availableFromMap.includes(ex));
+    
+    // Append any remaining exercises not explicitly in the sequence map
+    availableFromMap.forEach(ex => {
+      if (!exercisesForDay.includes(ex)) exercisesForDay.push(ex);
+    });
+  } else {
+    exercisesForDay = (globalData.workoutMap && globalData.workoutMap[workoutDay]) 
                         ? globalData.workoutMap[workoutDay] 
                         : globalData.exercises;
+  }
 
   if (!exercisesForDay || exercisesForDay.length === 0) {
     exercisesForDay = globalData.exercises;
@@ -517,7 +569,7 @@ function isCompoundExercise(exerciseName) {
 }
 
 // ==========================================
-// 🚀 PROFESSIONAL REP-RANGE DOUBLE PROGRESSION ENGINE
+// 🚀 PROFESSIONAL DOUBLE PROGRESSION ENGINE (Sets, Reps & Weight)
 // ==========================================
 function updateProgressionAdvice() {
   const exercise = document.getElementById('exerciseSelect').value.trim();
@@ -535,12 +587,14 @@ function updateProgressionAdvice() {
   const box = document.getElementById('suggestionText');
   
   const compound = isCompoundExercise(exercise);
-  // Compound: 6-10 rep range (ceiling 10), Isolation: 10-15 rep range (ceiling 15)
+  
+  // Baselines: Compounds get 3-4 sets & 6-10 rep range (ceiling 10). Isolations get 2-3 sets & 10-15 rep range (ceiling 15).
+  let defaultSets = compound ? 4 : 3;
   let minRepTarget = compound ? 6 : 10;
   let maxRepCeiling = compound ? 10 : 15;
-  let defaultRepsStr = compound ? "8/8/8" : "12/12/12";
+  let defaultRepsStr = compound ? "8/8/8/8" : "12/12/12";
 
-  let targetSets = 3;
+  let targetSets = defaultSets;
   let targetReps = defaultRepsStr;
   let targetWeight = 20;
   let rationale = "";
@@ -549,11 +603,11 @@ function updateProgressionAdvice() {
   const isLower = isLowerBodyExercise(exercise);
 
   if (!last) {
-    rationale = `No prior logs found. Starting baseline for this ${compound ? 'Compound (6–10 reps)' : 'Isolation (10–15 reps)'} movement.`;
+    rationale = `No prior logs found. Starting baseline for this ${compound ? 'Compound (3–4 sets, 6–10 reps)' : 'Isolation (2–3 sets, 10–15 reps)'} movement.`;
     currentPrescription = { weight: targetWeight, sets: targetSets, reps: defaultRepsStr, rir: 2 };
   } else {
     let lastWeight = last.weight || 0;
-    let lastSets = last.sets || 3;
+    let lastSets = last.sets || defaultSets;
     let rawReps = (last.reps || defaultRepsStr).toString().replace(/^'/, '');
     
     // Parse last session reps into an array to check if ceiling was reached across all sets
@@ -561,7 +615,7 @@ function updateProgressionAdvice() {
     let hitCeilingAcrossAllSets = repSets.length > 0 && repSets.every(r => r >= maxRepCeiling);
 
     targetWeight = roundToGymIncrement(lastWeight);
-    targetSets = lastSets;
+    targetSets = lastSets; // Preserve current working set volume unless deloaded
 
     if (phase.includes("Deload")) {
       targetWeight = Math.max(0, targetWeight - 5);
@@ -589,7 +643,7 @@ function updateProgressionAdvice() {
       // 📌 CONSOLIDATION: Build reps up towards ceiling
       targetWeight = roundToGymIncrement(lastWeight);
       targetReps = rawReps;
-      rationale = `📌 <strong class="text-warning">Rep-Range Progression:</strong> Hold at ${targetWeight}kg. Push your reps towards <b>${maxRepCeiling}/${maxRepCeiling}/${maxRepCeiling}</b> before taking the 5kg jump.`;
+      rationale = `📌 <strong class="text-warning">Rep-Range Progression:</strong> Hold at ${targetWeight}kg. Push your reps towards <b>${maxRepCeiling}</b> across all sets before taking the 5kg jump.`;
     }
 
     currentPrescription = { weight: targetWeight, sets: targetSets, reps: targetReps, rir: last.rir <= 1 ? 2 : last.rir };
