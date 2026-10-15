@@ -154,12 +154,12 @@ function updatePlateauBreakerUI() {
   if (!btn) return;
   if (isPlateauBreakerActive) {
     btn.classList.remove('btn-outline-danger');
-    btn.classList.add('btn-danger', 'text-white');
-    btn.textContent = '🔄 Reset Active (80%)';
+    btn.classList.add('btn-danger', 'text-white', 'shadow-sm');
+    btn.innerHTML = '🔄 Reset Active (80%)';
   } else {
-    btn.classList.remove('btn-danger', 'text-white');
+    btn.classList.remove('btn-danger', 'text-white', 'shadow-sm');
     btn.classList.add('btn-outline-danger');
-    btn.textContent = '🔄 Reset / Plateau Breaker';
+    btn.innerHTML = '🔄 Plateau Breaker';
   }
 }
 
@@ -627,7 +627,7 @@ function updateProgressionAdvice() {
   const isLower = isLowerBodyExercise(exercise);
 
   if (!last) {
-    rationale = `No prior logs found. Starting baseline for this ${compound ? 'Compound (3–4 sets, 6–10 reps)' : 'Isolation (2–3 sets, 10–15 reps)'} movement.`;
+    rationale = `No prior logs found. Starting baseline for this ${compound ? 'Compound (4 sets, 6–10 reps)' : 'Isolation (3 sets, 10–15 reps)'} movement.`;
     currentPrescription = { weight: targetWeight, sets: targetSets, reps: defaultRepsStr, rir: 2 };
   } else {
     let lastWeight = last.weight || 0;
@@ -641,12 +641,13 @@ function updateProgressionAdvice() {
     targetSets = lastSets;
 
     if (isPlateauBreakerActive) {
-      // 🔄 PLATEAU BREAKER RESET: Drop weight to ~80% of last logged weight, rounded to 5kg increments, reset reps to bottom of range
+      // 🔄 PLATEAU BREAKER RESET: Force sets to default, drop weight to ~80% of last logged weight, reset reps to bottom of range
+      targetSets = compound ? 4 : 3;
       let resetRaw = lastWeight * 0.8;
       targetWeight = roundToGymIncrement(resetRaw);
       if (targetWeight <= 0) targetWeight = 5;
       targetReps = Array(targetSets).fill(minRepTarget).join('/');
-      rationale = `🔄 <strong class="text-danger">Plateau Breaker Active:</strong> Resetting weight to ~80% of your max (${targetWeight}kg) with reps reset to [${targetReps}]. Build momentum cleanly back past your plateau!`;
+      rationale = `🔄 <strong class="text-danger">Plateau Breaker Active:</strong> Resetting sets to ${targetSets}, weight to ~80% (${targetWeight}kg), and reps to [${targetReps}]. Build momentum cleanly back past your plateau!`;
     } else if (phase.includes("Deload")) {
       targetWeight = Math.max(0, targetWeight - 5);
       targetSets = Math.max(2, targetSets - 1);
@@ -677,11 +678,32 @@ function updateProgressionAdvice() {
     currentPrescription = { weight: targetWeight, sets: targetSets, reps: targetReps, rir: last.rir <= 1 ? 2 : last.rir };
   }
 
-  let plateHint = currentPrescription.weight > 0 ? ` <br><small class="text-warning">🔩 Plates: ${calculatePlates(currentPrescription.weight)}</small>` : '';
+  let plateHint = currentPrescription.weight > 0 ? `
+    <div class="mt-2 pt-2 border-top border-secondary border-opacity-25 text-warning fw-medium" style="font-size: 0.8rem;">
+      🔩 <b>Plate Setup:</b> ${calculatePlates(currentPrescription.weight)}
+    </div>` : '';
 
   let html = `
-    <div class="mb-1 text-xtreme-gold">🎯 <b>Prescribed Target (${compound ? 'Compound 6-10' : 'Isolation 10-15'}):</b> ${currentPrescription.weight} kg | ${currentPrescription.sets} sets | Reps: [${currentPrescription.reps}]${plateHint}</div>
-    <div class="text-light mt-1">${rationale}</div>
+    <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+      <span class="badge bg-dark border border-warning text-xtreme-gold font-monospace px-2 py-1" style="font-size: 0.8rem;">
+        🎯 Prescribed: ${currentPrescription.weight} kg
+      </span>
+      <span class="badge bg-secondary text-light px-2 py-1" style="font-size: 0.75rem;">
+        ${currentPrescription.sets} Sets
+      </span>
+      <span class="badge bg-secondary text-light px-2 py-1" style="font-size: 0.75rem;">
+        Reps: [${currentPrescription.reps}]
+      </span>
+      <span class="badge bg-outline-secondary text-muted px-2 py-1" style="font-size: 0.7rem;">
+        ${compound ? 'Compound (6–10)' : 'Isolation (10–15)'}
+      </span>
+    </div>
+    
+    <div class="text-light mt-1" style="font-size: 0.825rem;">
+      ${rationale}
+    </div>
+    
+    ${plateHint}
   `;
   box.innerHTML = html;
 }
@@ -695,7 +717,7 @@ function applyPrescription() {
   
   const btn = document.getElementById('applyPrescriptionBtn');
   btn.textContent = '✅ Applied!';
-  setTimeout(() => { btn.textContent = '📥 Apply'; }, 1500);
+  setTimeout(() => { btn.textContent = '📥 Apply Target'; }, 1500);
 }
 
 // ==========================================
