@@ -61,6 +61,9 @@ function runFullQA() {
   let imbalanceActive = isChickenLegRiskActive();
   assert(imbalanceActive === true, "Upper-Dominant imbalance correctly detected (Squat 30kg vs Bench 50kg)");
 
+  // Restore mock data temporarily for Test 4
+  globalData = mockGlobalDataBackup;
+
   // ------------------------------------------------
   // TEST 4: Progression Advice & Auto-Balancing Boost
   // ------------------------------------------------
@@ -69,7 +72,13 @@ function runFullQA() {
   const phaseInput = document.getElementById('phase');
   let originalPhaseVal = phaseInput ? phaseInput.value : "";
   
-  if (phaseInput) phaseInput.value = "Accumulation (Volume)"; // Force standard training phase for test
+  if (phaseInput) phaseInput.value = "Accumulation (Volume)";
+
+  // Inject mock last logs for this test explicitly
+  globalData.lastLogs = {
+    "Bench Press": { weight: 50, weightUnit: "Kilogram (kg)", sets: 5, reps: "5/5/5/5/5", rir: 2 },
+    "Back Squat": { weight: 30, weightUnit: "Kilogram (kg)", sets: 5, reps: "8/8/8/8/8", rir: 2 }
+  };
 
   if (exerciseSelect) {
     exerciseSelect.value = "Back Squat";
@@ -81,12 +90,30 @@ function runFullQA() {
     console.warn("⚠️ Exercise dropdown not found in DOM, skipping UI-bound advice test.");
   }
 
-  // Restore original phase and mock data
+  // Restore real data and original phase
   if (phaseInput) phaseInput.value = originalPhaseVal;
   globalData = mockGlobalDataBackup;
 
   // ------------------------------------------------
-  // TEST 5: Offline Queue Caching Mechanism
+  // TEST 5: Live Database Data Integrity & Real Records
+  // ------------------------------------------------
+  console.log("\n--- Testing Live Database Records ---");
+  let hasHistory = globalData.history && Array.isArray(globalData.history);
+  assert(hasHistory === true, "globalData.history successfully loaded as an array");
+  
+  let historyCount = hasHistory ? globalData.history.length : 0;
+  console.log(`📊 [INFO] Total workout logs found in Google Sheets: ${historyCount}`);
+  assert(historyCount > 0, "Google Sheets database contains active history records");
+
+  let hasLastLogs = globalData.lastLogs && Object.keys(globalData.lastLogs).length > 0;
+  assert(hasLastLogs === true, "globalData.lastLogs map is populated with exercise records");
+
+  // Run live imbalance evaluation on current database records
+  let liveImbalance = isChickenLegRiskActive();
+  console.log(`⚖️ [INFO] Live Database Symmetry Status (Upper vs Lower): Upper-Dominant Imbalance Active = ${liveImbalance}`);
+
+  // ------------------------------------------------
+  // TEST 6: Offline Queue Caching Mechanism
   // ------------------------------------------------
   console.log("\n--- Testing Offline-First Queue Caching ---");
   let testPayload = { action: "insert", exercise: "Test QA Exercise", weight: 50, sets: 3 };
@@ -101,7 +128,7 @@ function runFullQA() {
   localStorage.removeItem('offline_workout_queue');
 
   // ------------------------------------------------
-  // TEST 6: Drift-Free Rest Timer Precision
+  // TEST 7: Drift-Free Rest Timer Precision
   // ------------------------------------------------
   console.log("\n--- Testing Rest Timer Functions ---");
   startRestTimer(5);
