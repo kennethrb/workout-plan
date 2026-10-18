@@ -147,8 +147,9 @@
           <div class="card shadow-sm mb-4 border-0" id="exercisePreviewCard" style="background: linear-gradient(145deg, #18181B, #121215); border-left: 4px solid var(--xtreme-yellow) !important; display: none;">
             <div class="card-body text-center p-3">
               <h6 class="text-xtreme-gold fw-bold mb-2 text-uppercase" style="font-size: 0.75rem; letter-spacing: 0.5px;">🎥 Form Demonstration</h6>
-              <div class="d-flex justify-content-center">
-                <img id="exerciseGifPreview" src="" alt="Exercise Form GIF" class="rounded border border-secondary" style="max-height: 160px; object-fit: contain; background: #000;" onerror="this.parentElement.parentElement.style.display='none';" />
+              <div class="d-flex justify-content-center align-items-center" style="min-height: 140px;">
+                <img id="exerciseGifPreview" src="" alt="Exercise Form GIF" class="rounded border border-secondary" style="max-height: 150px; width: auto; object-fit: contain; background: #000;" onerror="this.style.display='none'; document.getElementById('gifErrorMsg').style.display='block';" />
+                <span id="gifErrorMsg" class="text-muted small" style="display: none;">Demonstration preview unavailable</span>
               </div>
             </div>
           </div>
