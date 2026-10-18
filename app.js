@@ -938,41 +938,24 @@ function renderWeeklyVolumeTracker() {
   container.innerHTML = html;
 }
 
-// ==========================================
-// 🎥 OPEN-SOURCE EXERCISE ANIMATED GIF MAP
-// ==========================================
-const EXERCISE_GIF_MAP = {
-  "Bench Press": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Barbell_Bench_Press/images/0.jpg",
-  "Back Squat": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Barbell_Full_Squat/images/0.jpg",
-  "Barbell Row": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Barbell_Row/images/0.jpg",
-  "Overhead Press": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Barbell_Seated_Overhead_Press/images/0.jpg",
-  "Pull-ups / Lat Pulldown": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Pull-ups/images/0.jpg",
-  "Romanian Deadlift": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Barbell_Deadlift/images/0.jpg",
-  "Walking Lunges": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Dumbbell_Lunge/images/0.jpg",
-  "Calf Raises": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Standing_Calf_Raise/images/0.jpg",
-  "Hanging Leg Raises": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Hanging_Leg_Raise/images/0.jpg",
-  "Incline Dumbell Press": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Incline_Dumbbell_Press/images/0.jpg",
-  "Seated Cable Row": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Seated_Cable_Row/images/0.jpg",
-  "Dumbell Shoulder Press": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Dumbbell_Shoulder_Press/images/0.jpg",
-  "Lateral Raises": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Dumbbell_Lateral_Raise/images/0.jpg",
-  "Bicep Curl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Barbell_Curl/images/0.jpg",
-  "Tricep Pushdown": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Cable_Pushdown/images/0.jpg",
-  "Face Pull": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Cable_Seated_Row/images/0.jpg",
-  "Deadlift": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Barbell_Deadlift/images/0.jpg",
-  "Front Squat / Leg Press": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Leg_Press/images/0.jpg",
-  "Bulgarian Split Squat": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Dumbbell_Bulgarian_Split_Squat/images/0.jpg",
-  "Hamstring Curl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Lying_Leg_Curl/images/0.jpg",
-  "Hip Thrust / Glute Bridge": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Barbell_Hip_Thrust/images/0.jpg",
-  "Ab Wheel": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Abroller/images/0.jpg",
-  "Plank": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Plank/images/0.jpg"
-};
+
 
 function updateExerciseFormPreview() {
   const selectedExercise = document.getElementById('exerciseSelect').value;
   const previewCard = document.getElementById('exercisePreviewCard');
   const gifImg = document.getElementById('exerciseGifPreview');
 
-  let gifUrl = EXERCISE_GIF_MAP[selectedExercise];
+  let gifUrl = null;
+
+  // 1. Check if the Reference tab from your spreadsheet has an image URL for this exercise
+  if (globalData && globalData.reference && globalData.reference[selectedExercise]) {
+    gifUrl = globalData.reference[selectedExercise].image;
+  }
+
+  // 2. Fallback to hardcoded map if not present in globalData
+  if (!gifUrl && typeof EXERCISE_GIF_MAP !== 'undefined') {
+    gifUrl = EXERCISE_GIF_MAP[selectedExercise];
+  }
 
   if (gifUrl && gifUrl.trim() !== "") {
     gifImg.src = gifUrl;
