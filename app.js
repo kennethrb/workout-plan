@@ -961,9 +961,9 @@ function updateExerciseFormPreview() {
     gifImg.style.display = 'block';
     if (errorMsg) errorMsg.style.display = 'none';
     
-    // Clear old source briefly to force reload
     gifImg.src = "";
-    gifImg.src = "https://images.weserv.nl/?url=" + encodeURIComponent(gifUrl) + "&output=gif";
+    // Added &n=-1 to preserve all animation frames through the proxy
+    gifImg.src = "https://images.weserv.nl/?url=" + encodeURIComponent(gifUrl) + "&n=-1";
     
     previewCard.style.display = 'block';
   } else {
