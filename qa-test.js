@@ -53,16 +53,19 @@ function runFullQA() {
   assert(isLowerBodyExercise("Bench Press") === false, "Bench Press flagged as upper body");
 
   let mockGlobalDataBackup = JSON.parse(JSON.stringify(globalData));
+
+  // Mock global data for Test 3 & Test 4
   globalData.lastLogs = {
     "Bench Press": { weight: 50, weightUnit: "Kilogram (kg)", sets: 5, reps: "5/5/5/5/5", rir: 2 },
     "Back Squat": { weight: 30, weightUnit: "Kilogram (kg)", sets: 5, reps: "8/8/8/8/8", rir: 2 }
   };
+  globalData.history = [
+    { exercise: "Bench Press", weight: 50, weightUnit: "Kilogram (kg)", sets: 5, reps: "5/5/5/5/5", rir: 2, date: "10/18/2026" },
+    { exercise: "Back Squat", weight: 30, weightUnit: "Kilogram (kg)", sets: 5, reps: "8/8/8/8/8", rir: 2, date: "10/18/2026" }
+  ];
   
   let imbalanceActive = isChickenLegRiskActive();
   assert(imbalanceActive === true, "Upper-Dominant imbalance correctly detected (Squat 30kg vs Bench 50kg)");
-
-  // Restore mock data temporarily for Test 4
-  globalData = mockGlobalDataBackup;
 
   // ------------------------------------------------
   // TEST 4: Progression Advice & Auto-Balancing Boost
@@ -74,12 +77,6 @@ function runFullQA() {
   
   if (phaseInput) phaseInput.value = "Accumulation (Volume)";
 
-  // Inject mock last logs for this test explicitly
-  globalData.lastLogs = {
-    "Bench Press": { weight: 50, weightUnit: "Kilogram (kg)", sets: 5, reps: "5/5/5/5/5", rir: 2 },
-    "Back Squat": { weight: 30, weightUnit: "Kilogram (kg)", sets: 5, reps: "8/8/8/8/8", rir: 2 }
-  };
-
   if (exerciseSelect) {
     exerciseSelect.value = "Back Squat";
     updateProgressionAdvice();
@@ -90,9 +87,9 @@ function runFullQA() {
     console.warn("⚠️ Exercise dropdown not found in DOM, skipping UI-bound advice test.");
   }
 
-  // Restore real data and original phase
+  // Restore real live data and original phase
   if (phaseInput) phaseInput.value = originalPhaseVal;
-  globalData = mockGlobalDataBackup;
+  globalData = JSON.parse(JSON.stringify(mockGlobalDataBackup));
 
   // ------------------------------------------------
   // TEST 5: Live Database Data Integrity & Real Records
@@ -108,7 +105,6 @@ function runFullQA() {
   let hasLastLogs = globalData.lastLogs && Object.keys(globalData.lastLogs).length > 0;
   assert(hasLastLogs === true, "globalData.lastLogs map is populated with exercise records");
 
-  // Run live imbalance evaluation on current database records
   let liveImbalance = isChickenLegRiskActive();
   console.log(`⚖️ [INFO] Live Database Symmetry Status (Upper vs Lower): Upper-Dominant Imbalance Active = ${liveImbalance}`);
 
