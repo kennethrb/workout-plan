@@ -939,7 +939,138 @@ function renderWeeklyVolumeTracker() {
   container.innerHTML = html;
 }
 
+// ==========================================
+// 🧮 ESTIMATED 1-REP MAX (E-1RM) UTILITY
+// ==========================================
+function calculateEstimated1RM(weight, repsStr) {
+  if (!weight || weight <= 0 || !repsStr) return 0;
+  
+  // Parse sets/reps string (e.g. "8/8/8/8" or single value "10")
+  let cleanReps = String(repsStr).replace(/^'/, '');
+  let repSets = cleanReps.split('/').map(r => parseInt(r.trim()) || 0);
+  
+  if (repSets.length === 0) return weight;
+  
+  // Find max effective reps performed in a set (cap effective estimation at <= 15 reps)
+  let maxReps = Math.max(...repSets);
+  if (maxReps <= 0) return weight;
+  
+  // Epley Formula: e1RM = Weight * (1 + (reps / 30))
+  let effectiveReps = Math.min(maxReps, 15);
+  let e1rm = weight * (1 + (effectiveReps / 30));
+  
+  return Math.round(e1rm * 10) / 10;
+}
 
+// ==========================================
+// 📈 ENHANCED PROGRESS CHART (WEIGHT vs e-1RM)
+// ==========================================
+function renderProgressChart() {
+  const exerciseSelect = document.getElementById('chartExerciseSelect');
+  if (!exerciseSelect || !exerciseSelect.value) return;
+  
+  const selectedEx = exerciseSelect.value.toLowerCase();
+  const history = globalData.history || [];
+  
+  // Check which metric radio button is selected
+  const isE1RM = document.getElementById('metricE1RM') && document.getElementById('metricE1RM').checked;
+
+  let exerciseLogs = history
+    .filter(item => item.exercise && item.exercise.toLowerCase() === selectedEx)
+    .sort((a, b) => new Date(a.date) - new Date(b.date));
+
+  let labels = exerciseLogs.map(item => {
+    try {
+      let d = new Date(item.date);
+      return isNaN(d) ? item.date : d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    } catch (e) {
+      return item.date;
+    }
+  });
+
+  let dataValues = exerciseLogs.map(item => {
+    let wt = item.weight || 0;
+    if (isE1RM) {
+      return calculateEstimated1RM(wt, item.reps);
+    }
+    return wt;
+  });
+
+  const ctx = document.getElementById('progressChart').getContext('2d');
+  
+  if (myProgressChart) {
+    myProgressChart.destroy();
+  }
+
+  if (exerciseLogs.length === 0) {
+    labels = ['No Data'];
+    dataValues = [0];
+  }
+
+  let chartLabel = isE1RM ? 'Estimated 1-Rep Max (kg)' : 'Working Weight (kg)';
+  let chartColor = isE1RM ? '#FFE500' : '#C8102E';
+
+  myProgressChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: chartLabel,
+        data: dataValues,
+        borderColor: chartColor,
+        backgroundColor: isE1RM ? 'rgba(255, 229, 0, 0.1)' : 'rgba(200, 16, 46, 0.1)',
+        borderWidth: 2,
+        fill: true,
+        tension: 0.2,
+        pointBackgroundColor: '#FFE500',
+        pointRadius: 4
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false }
+      },
+      scales: {
+        x: {
+          ticks: { color: '#9CA3AF', font: { size: 10 } },
+          grid: { color: '#27272A' }
+        },
+        y: {
+          ticks: { color: '#9CA3AF', font: { size: 10 } },
+          grid: { color: '#27272A' },
+          beginAtZero: true
+        }
+      }
+    }
+  });
+}
+
+// ==========================================
+// 💾 LOCAL DATA BACKUP EXPORT UTILITY
+// ==========================================
+function exportLocalStorageBackup() {
+  try {
+    const backupData = {
+      exportDate: new Date().toISOString(),
+      globalData: globalData,
+      offlineQueue: JSON.parse(localStorage.getItem('offline_workout_queue') || '[]')
+    };
+
+    let dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData, null, 2));
+    let downloadAnchor = document.createElement('a');
+    downloadAnchor.setAttribute("href", dataStr);
+    downloadAnchor.setAttribute("download", `xtreme_workout_backup_${new Date().toISOString().slice(0,10)}.json`);
+    document.body.appendChild(downloadAnchor);
+    downloadAnchor.click();
+    downloadAnchor.remove();
+
+    showToast("Backup exported successfully as JSON! 💾");
+  } catch (err) {
+    showToast("Error exporting backup: " + err);
+  }
+}
 
 function updateExerciseFormPreview() {
   const selectedExercise = document.getElementById('exerciseSelect').value;
@@ -970,3 +1101,4 @@ function updateExerciseFormPreview() {
     previewCard.style.display = 'none';
   }
 }
+
