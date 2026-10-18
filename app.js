@@ -133,6 +133,7 @@ function initApp() {
   renderWeeklyVolumeTracker();
   renderHistoryList();
   initChartDropdown();
+  updateExerciseFormPreview();
 }
 
 function showToast(message) {
