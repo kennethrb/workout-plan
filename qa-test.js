@@ -52,9 +52,10 @@ function runFullQA() {
   assert(isLowerBodyExercise("Deadlift") === true, "Deadlift flagged as lower body");
   assert(isLowerBodyExercise("Bench Press") === false, "Bench Press flagged as upper body");
 
+  // Backup real globalData before mocking
   let mockGlobalDataBackup = JSON.parse(JSON.stringify(globalData));
 
-  // Mock global data for Test 3 & Test 4
+  // Explicit Mock for Test 3 & Test 4
   globalData.lastLogs = {
     "Bench Press": { weight: 50, weightUnit: "Kilogram (kg)", sets: 5, reps: "5/5/5/5/5", rir: 2 },
     "Back Squat": { weight: 30, weightUnit: "Kilogram (kg)", sets: 5, reps: "8/8/8/8/8", rir: 2 }
@@ -87,7 +88,7 @@ function runFullQA() {
     console.warn("⚠️ Exercise dropdown not found in DOM, skipping UI-bound advice test.");
   }
 
-  // Restore real live data and original phase
+  // Restore live globalData and original phase
   if (phaseInput) phaseInput.value = originalPhaseVal;
   globalData = JSON.parse(JSON.stringify(mockGlobalDataBackup));
 
