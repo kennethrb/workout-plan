@@ -227,7 +227,7 @@ function updateExerciseDropdown(isInitialLoad = false) {
 
   updateProgressionAdvice();
   checkTimedExercise();
-  updateExerciseFormPreview();
+  updateExerciseFormPreview(); // <--- Make sure this line is here inside updateExerciseDropdown()
 }
 
 function checkTimedExercise() {
@@ -939,32 +939,32 @@ function renderWeeklyVolumeTracker() {
 }
 
 // ==========================================
-// 🎥 OPEN-SOURCE EXERCISE GIF DATABASE MAP
+// 🎥 OPEN-SOURCE EXERCISE ANIMATED GIF MAP
 // ==========================================
 const EXERCISE_GIF_MAP = {
-  "Bench Press": "https://static.exercisedb.dev/media/EIVB3t.gif",
-  "Back Squat": "https://static.exercisedb.dev/media/gfVB3t.gif",
-  "Barbell Row": "https://static.exercisedb.dev/media/dmVB3t.gif",
-  "Overhead Press": "https://static.exercisedb.dev/media/kTVB3t.gif",
-  "Pull-ups / Lat Pulldown": "https://static.exercisedb.dev/media/qdVB3t.gif",
-  "Romanian Deadlift": "https://static.exercisedb.dev/media/rRVB3t.gif",
-  "Walking Lunges": "https://static.exercisedb.dev/media/IZVB3t.gif",
-  "Calf Raises": "https://static.exercisedb.dev/media/ywVB3t.gif",
-  "Hanging Leg Raises": "https://static.exercisedb.dev/media/I3VB3t.gif",
-  "Incline Dumbell Press": "https://static.exercisedb.dev/media/nsVB3t.gif",
-  "Seated Cable Row": "https://static.exercisedb.dev/media/UFVB3t.gif",
-  "Dumbell Shoulder Press": "https://static.exercisedb.dev/media/znVB3t.gif",
-  "Lateral Raises": "https://static.exercisedb.dev/media/n5VB3t.gif",
-  "Bicep Curl": "https://static.exercisedb.dev/media/xiVB3t.gif",
-  "Tricep Pushdown": "https://static.exercisedb.dev/media/qRVB3t.gif",
-  "Face Pull": "https://static.exercisedb.dev/media/qRVB3t.gif",
-  "Deadlift": "https://static.exercisedb.dev/media/ilVB3t.gif",
-  "Front Squat / Leg Press": "https://static.exercisedb.dev/media/2QVB3t.gif",
-  "Bulgarian Split Squat": "https://static.exercisedb.dev/media/qxVB3t.gif",
-  "Hamstring Curl": "https://static.exercisedb.dev/media/nnVB3t.gif",
-  "Hip Thrust / Glute Bridge": "https://static.exercisedb.dev/media/gfVB3t.gif",
-  "Ab Wheel": "https://static.exercisedb.dev/media/NAgVB3t.gif",
-  "Plank": "https://static.exercisedb.dev/media/VBVB3t.gif"
+  "Bench Press": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Barbell_Bench_Press/images/0.jpg",
+  "Back Squat": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Barbell_Full_Squat/images/0.jpg",
+  "Barbell Row": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Barbell_Row/images/0.jpg",
+  "Overhead Press": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Barbell_Seated_Overhead_Press/images/0.jpg",
+  "Pull-ups / Lat Pulldown": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Pull-ups/images/0.jpg",
+  "Romanian Deadlift": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Barbell_Deadlift/images/0.jpg",
+  "Walking Lunges": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Dumbbell_Lunge/images/0.jpg",
+  "Calf Raises": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Standing_Calf_Raise/images/0.jpg",
+  "Hanging Leg Raises": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Hanging_Leg_Raise/images/0.jpg",
+  "Incline Dumbell Press": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Incline_Dumbbell_Press/images/0.jpg",
+  "Seated Cable Row": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Seated_Cable_Row/images/0.jpg",
+  "Dumbell Shoulder Press": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Dumbbell_Shoulder_Press/images/0.jpg",
+  "Lateral Raises": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Dumbbell_Lateral_Raise/images/0.jpg",
+  "Bicep Curl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Barbell_Curl/images/0.jpg",
+  "Tricep Pushdown": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Cable_Pushdown/images/0.jpg",
+  "Face Pull": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Cable_Seated_Row/images/0.jpg",
+  "Deadlift": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Barbell_Deadlift/images/0.jpg",
+  "Front Squat / Leg Press": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Leg_Press/images/0.jpg",
+  "Bulgarian Split Squat": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Dumbbell_Bulgarian_Split_Squat/images/0.jpg",
+  "Hamstring Curl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Lying_Leg_Curl/images/0.jpg",
+  "Hip Thrust / Glute Bridge": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Barbell_Hip_Thrust/images/0.jpg",
+  "Ab Wheel": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Abroller/images/0.jpg",
+  "Plank": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Plank/images/0.jpg"
 };
 
 function updateExerciseFormPreview() {
