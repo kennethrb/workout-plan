@@ -48,6 +48,7 @@ const WORKOUT_SEQUENCES = {
 
 window.addEventListener('DOMContentLoaded', function() {
   fetchData();
+  syncOfflineQueue();
 });
 
 function fetchData() {
@@ -59,8 +60,31 @@ function fetchData() {
     })
     .catch(err => {
       console.error("Error loading data:", err);
-      document.getElementById('loading').innerHTML = '<p class="text-danger">Failed to load workout data from backend.</p>';
+      document.getElementById('loading').innerHTML = '<p class="text-danger">Failed to load workout data from backend. Check network connectivity.</p>';
     });
+}
+
+function syncOfflineQueue() {
+  let queue = JSON.parse(localStorage.getItem('offline_workout_queue') || '[]');
+  if (queue.length === 0) return;
+
+  let payload = queue.shift();
+  fetch(API_URL, {
+    method: 'POST',
+    body: JSON.stringify(payload)
+  })
+  .then(res => res.json())
+  .then(() => {
+    localStorage.setItem('offline_workout_queue', JSON.stringify(queue));
+    showToast("Synced offline workout log successfully! 📶");
+    if (queue.length > 0) syncOfflineQueue();
+    else fetchData();
+  })
+  .catch(() => {
+    // Put back if still offline
+    queue.unshift(payload);
+    localStorage.setItem('offline_workout_queue', JSON.stringify(queue));
+  });
 }
 
 function initApp() {
@@ -704,31 +728,34 @@ function applyPrescription() {
   setTimeout(() => { btn.textContent = '📥 Apply Target'; }, 1500);
 }
 
+// ⏱️ Drift-free timestamp-based rest timer
 function startRestTimer(seconds) {
   clearInterval(restTimerInterval);
   const display = document.getElementById('timerDisplay');
   const widget = document.getElementById('restTimerWidget');
   widget.style.display = 'block';
   
-  let remaining = seconds;
+  let durationMs = seconds * 1000;
+  let startTime = performance.now();
+  let endTime = startTime + durationMs;
   
-  function updateDisplay() {
-    let m = Math.floor(remaining / 60);
-    let s = remaining % 60;
-    display.textContent = `${m}:${s < 10 ? '0' : ''}${s}`;
-  }
-  
-  updateDisplay();
-  
-  restTimerInterval = setInterval(() => {
-    remaining--;
-    if (remaining < 0) {
+  function updateTimer() {
+    let now = performance.now();
+    let remainingMs = endTime - now;
+    let remainingSec = Math.ceil(remainingMs / 1000);
+    
+    if (remainingSec <= 0) {
       clearInterval(restTimerInterval);
       display.textContent = "Time to lift! 🔥";
     } else {
-      updateDisplay();
+      let m = Math.floor(remainingSec / 60);
+      let s = remainingSec % 60;
+      display.textContent = `${m}:${s < 10 ? '0' : ''}${s}`;
     }
-  }, 1000);
+  }
+  
+  updateTimer();
+  restTimerInterval = setInterval(updateTimer, 250);
 }
 
 function stopRestTimer() {
@@ -774,10 +801,16 @@ document.getElementById('workoutForm').addEventListener('submit', function(e) {
     startRestTimer(90);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   })
-  .catch(err => {
-    showToast("Error saving workout: " + err);
+  .catch(() => {
+    // 📴 Offline Caching Fallback
+    let queue = JSON.parse(localStorage.getItem('offline_workout_queue') || '[]');
+    queue.push(payload);
+    localStorage.setItem('offline_workout_queue', JSON.stringify(queue));
+    
+    showToast("⚠️ Network offline. Saved to local queue!");
     btn.disabled = false;
     btn.textContent = editingRowIndex ? 'Update Log Entry' : 'Log Set & Update Stats';
+    cancelEdit();
   });
 });
 
