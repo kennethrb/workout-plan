@@ -945,22 +945,26 @@ function updateExerciseFormPreview() {
   const selectedExercise = document.getElementById('exerciseSelect').value;
   const previewCard = document.getElementById('exercisePreviewCard');
   const gifImg = document.getElementById('exerciseGifPreview');
+  const errorMsg = document.getElementById('gifErrorMsg');
 
   let gifUrl = null;
 
-  // 1. Check if the Reference tab from your spreadsheet has an image URL for this exercise
   if (globalData && globalData.reference && globalData.reference[selectedExercise]) {
     gifUrl = globalData.reference[selectedExercise].image;
   }
 
-  // 2. Fallback to hardcoded map if not present in globalData
   if (!gifUrl && typeof EXERCISE_GIF_MAP !== 'undefined') {
     gifUrl = EXERCISE_GIF_MAP[selectedExercise];
   }
 
   if (gifUrl && gifUrl.trim() !== "") {
-    // Route through free image proxy to bypass CORS / hotlinking blocks
-    gifImg.src = "https://images.weserv.nl/?url=" + encodeURIComponent(gifUrl);
+    gifImg.style.display = 'block';
+    if (errorMsg) errorMsg.style.display = 'none';
+    
+    // Clear old source briefly to force reload
+    gifImg.src = "";
+    gifImg.src = "https://images.weserv.nl/?url=" + encodeURIComponent(gifUrl) + "&output=gif";
+    
     previewCard.style.display = 'block';
   } else {
     previewCard.style.display = 'none';
