@@ -119,6 +119,7 @@ function initApp() {
     updatePlateauBreakerUI();
     updateProgressionAdvice();
     checkTimedExercise();
+    updateExerciseFormPreview();
   });
 
   ['sleep', 'stress', 'joints'].forEach(id => {
@@ -226,6 +227,7 @@ function updateExerciseDropdown(isInitialLoad = false) {
 
   updateProgressionAdvice();
   checkTimedExercise();
+  updateExerciseFormPreview();
 }
 
 function checkTimedExercise() {
@@ -783,21 +785,23 @@ document.getElementById('workoutForm').addEventListener('submit', function(e) {
   };
 
   fetch(API_URL, {
-    method: 'POST',
-    body: JSON.stringify(payload)
-  })
-  .then(res => res.json())
-  .then(res => {
-    showToast(res.message || "Workout saved successfully!");
-    isPlateauBreakerActive = false;
-    updatePlateauBreakerUI();
-    cancelEdit(); 
-    fetchData();  
-    btn.disabled = false;
-    
-    startRestTimer(90);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  })
+      method: 'POST',
+      body: JSON.stringify(payload)
+    })
+    .then(res => res.json())
+    .then(res => {
+      showToast(res.message || "Workout saved successfully!");
+      isPlateauBreakerActive = false;
+      updatePlateauBreakerUI();
+      cancelEdit(); 
+      fetchData();  
+      btn.disabled = false;
+      
+      startRestTimer(90);
+      
+      // 👇 ADD THIS SCROLL LINE HERE:
+      document.getElementById('restTimerWidget').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    })
   .catch(() => {
     let queue = JSON.parse(localStorage.getItem('offline_workout_queue') || '[]');
     queue.push(payload);
@@ -932,4 +936,48 @@ function renderWeeklyVolumeTracker() {
   `;
 
   container.innerHTML = html;
+}
+
+// ==========================================
+// 🎥 OPEN-SOURCE EXERCISE GIF DATABASE MAP
+// ==========================================
+const EXERCISE_GIF_MAP = {
+  "Bench Press": "https://static.exercisedb.dev/media/EIVB3t.gif",
+  "Back Squat": "https://static.exercisedb.dev/media/gfVB3t.gif",
+  "Barbell Row": "https://static.exercisedb.dev/media/dmVB3t.gif",
+  "Overhead Press": "https://static.exercisedb.dev/media/kTVB3t.gif",
+  "Pull-ups / Lat Pulldown": "https://static.exercisedb.dev/media/qdVB3t.gif",
+  "Romanian Deadlift": "https://static.exercisedb.dev/media/rRVB3t.gif",
+  "Walking Lunges": "https://static.exercisedb.dev/media/IZVB3t.gif",
+  "Calf Raises": "https://static.exercisedb.dev/media/ywVB3t.gif",
+  "Hanging Leg Raises": "https://static.exercisedb.dev/media/I3VB3t.gif",
+  "Incline Dumbell Press": "https://static.exercisedb.dev/media/nsVB3t.gif",
+  "Seated Cable Row": "https://static.exercisedb.dev/media/UFVB3t.gif",
+  "Dumbell Shoulder Press": "https://static.exercisedb.dev/media/znVB3t.gif",
+  "Lateral Raises": "https://static.exercisedb.dev/media/n5VB3t.gif",
+  "Bicep Curl": "https://static.exercisedb.dev/media/xiVB3t.gif",
+  "Tricep Pushdown": "https://static.exercisedb.dev/media/qRVB3t.gif",
+  "Face Pull": "https://static.exercisedb.dev/media/qRVB3t.gif",
+  "Deadlift": "https://static.exercisedb.dev/media/ilVB3t.gif",
+  "Front Squat / Leg Press": "https://static.exercisedb.dev/media/2QVB3t.gif",
+  "Bulgarian Split Squat": "https://static.exercisedb.dev/media/qxVB3t.gif",
+  "Hamstring Curl": "https://static.exercisedb.dev/media/nnVB3t.gif",
+  "Hip Thrust / Glute Bridge": "https://static.exercisedb.dev/media/gfVB3t.gif",
+  "Ab Wheel": "https://static.exercisedb.dev/media/NAgVB3t.gif",
+  "Plank": "https://static.exercisedb.dev/media/VBVB3t.gif"
+};
+
+function updateExerciseFormPreview() {
+  const selectedExercise = document.getElementById('exerciseSelect').value;
+  const previewCard = document.getElementById('exercisePreviewCard');
+  const gifImg = document.getElementById('exerciseGifPreview');
+
+  let gifUrl = EXERCISE_GIF_MAP[selectedExercise];
+
+  if (gifUrl && gifUrl.trim() !== "") {
+    gifImg.src = gifUrl;
+    previewCard.style.display = 'block';
+  } else {
+    previewCard.style.display = 'none';
+  }
 }
