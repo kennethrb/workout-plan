@@ -24,22 +24,19 @@ function runFullQA() {
   // TEST 1: Gym Plate Math Calculation Engine
   // ------------------------------------------------
   console.log("\n--- Testing Plate Math Engine ---");
-  // Test standard bar (20kg) with 60kg target -> 20kg per side (1x 20kg plate)
   let plateTest1 = calculatePlates(60);
   assert(plateTest1.includes("1x 20kg"), "Plate calculation for 60kg with 20kg bar");
 
-  // Test zero bar (machine/dumbbell)
   let plateTest2 = calculatePlates(30);
-  // Temporarily select machine bar (0kg)
   const barSelect = document.getElementById('barbellType');
   let originalBarVal = barSelect ? barSelect.value : "20";
   if (barSelect) barSelect.value = "0";
   let plateTest3 = calculatePlates(40);
   assert(plateTest3.includes("Dumbbell/Machine"), "Plate calculation for 0kg bar (Machine/Dumbbell)");
-  if (barSelect) barSelect.value = originalBarVal; // restore
+  if (barSelect) barSelect.value = originalBarVal;
 
   // ------------------------------------------------
-  // Test 2: Compound vs Isolation Exercise Classifier
+  // TEST 2: Compound vs Isolation Exercise Classifier
   // ------------------------------------------------
   console.log("\n--- Testing Exercise Classification ---");
   assert(isCompoundExercise("Bench Press") === true, "Bench Press classified as compound");
@@ -48,14 +45,13 @@ function runFullQA() {
   assert(isCompoundExercise("Lateral Raises") === false, "Lateral Raises classified as isolation");
 
   // ------------------------------------------------
-  // Test 3: Lower Body Detector & Symmetry Asymmetry Logic
+  // TEST 3: Lower Body Detector & Symmetry Asymmetry Logic
   // ------------------------------------------------
   console.log("\n--- Testing Symmetry & Imbalance Engine ---");
   assert(isLowerBodyExercise("Back Squat") === true, "Back Squat flagged as lower body");
   assert(isLowerBodyExercise("Deadlift") === true, "Deadlift flagged as lower body");
   assert(isLowerBodyExercise("Bench Press") === false, "Bench Press flagged as upper body");
 
-  // Mock globalData with Upper-Dominant imbalance (Bench @ 50kg vs Squat @ 30kg)
   let mockGlobalDataBackup = JSON.parse(JSON.stringify(globalData));
   globalData.lastLogs = {
     "Bench Press": { weight: 50, weightUnit: "Kilogram (kg)", sets: 5, reps: "5/5/5/5/5", rir: 2 },
@@ -66,12 +62,16 @@ function runFullQA() {
   assert(imbalanceActive === true, "Upper-Dominant imbalance correctly detected (Squat 30kg vs Bench 50kg)");
 
   // ------------------------------------------------
-  // Test 4: Progression Advice & Auto-Balancing Boost
+  // TEST 4: Progression Advice & Auto-Balancing Boost
   // ------------------------------------------------
   console.log("\n--- Testing Progression Advice & Auto-Balancing Boost ---");
   const exerciseSelect = document.getElementById('exerciseSelect');
+  const phaseInput = document.getElementById('phase');
+  let originalPhaseVal = phaseInput ? phaseInput.value : "";
+  
+  if (phaseInput) phaseInput.value = "Accumulation (Volume)"; // Force standard training phase for test
+
   if (exerciseSelect) {
-    // Force select Back Squat to test lower body imbalance boost
     exerciseSelect.value = "Back Squat";
     updateProgressionAdvice();
     
@@ -81,16 +81,16 @@ function runFullQA() {
     console.warn("⚠️ Exercise dropdown not found in DOM, skipping UI-bound advice test.");
   }
 
-  // Restore mock data
+  // Restore original phase and mock data
+  if (phaseInput) phaseInput.value = originalPhaseVal;
   globalData = mockGlobalDataBackup;
 
   // ------------------------------------------------
-  // Test 5: Offline Queue Caching Mechanism
+  // TEST 5: Offline Queue Caching Mechanism
   // ------------------------------------------------
   console.log("\n--- Testing Offline-First Queue Caching ---");
   let testPayload = { action: "insert", exercise: "Test QA Exercise", weight: 50, sets: 3 };
   
-  // Clear and push to queue
   localStorage.removeItem('offline_workout_queue');
   let queueBefore = JSON.parse(localStorage.getItem('offline_workout_queue') || '[]');
   queueBefore.push(testPayload);
@@ -98,10 +98,10 @@ function runFullQA() {
   
   let queueAfter = JSON.parse(localStorage.getItem('offline_workout_queue') || '[]');
   assert(queueAfter.length === 1 && queueAfter[0].exercise === "Test QA Exercise", "Offline queue successfully stored payload in localStorage");
-  localStorage.removeItem('offline_workout_queue'); // Cleanup
+  localStorage.removeItem('offline_workout_queue');
 
   // ------------------------------------------------
-  // Test 6: Drift-Free Rest Timer Precision
+  // TEST 6: Drift-Free Rest Timer Precision
   // ------------------------------------------------
   console.log("\n--- Testing Rest Timer Functions ---");
   startRestTimer(5);
