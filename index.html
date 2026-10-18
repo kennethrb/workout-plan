@@ -222,7 +222,18 @@
 
       <!-- 📈 Exercise Progress Chart Card -->
       <div class="card shadow-sm mb-4">
-        <h4 class="mb-3 fs-5 fw-bold text-white">Progress Trend Chart</h4>
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h4 class="fs-5 fw-bold text-white mb-0">Progress Trend Chart</h4>
+          <!-- Chart Metric Toggle -->
+          <div class="btn-group btn-group-sm" role="group">
+            <input type="radio" class="btn-check" name="chartMetric" id="metricWeight" autocomplete="off" checked onclick="renderProgressChart()">
+            <label class="btn btn-outline-warning" for="metricWeight" style="font-size: 0.725rem;">Weight (kg)</label>
+
+            <input type="radio" class="btn-check" name="chartMetric" id="metricE1RM" autocomplete="off" onclick="renderProgressChart()">
+            <label class="btn btn-outline-warning" for="metricE1RM" style="font-size: 0.725rem;">Est. 1RM</label>
+          </div>
+        </div>
+        
         <div class="mb-2">
           <select class="form-select form-select-sm bg-dark text-light border-secondary" id="chartExerciseSelect" onchange="renderProgressChart()">
             <!-- Populated dynamically -->
@@ -235,7 +246,14 @@
       
       <!-- History Search & Management Card -->
       <div class="card shadow-sm">
-        <h4 class="mb-3 fs-5 fw-bold text-white">Workout History & Management</h4>
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h4 class="fs-5 fw-bold text-white mb-0">Workout History & Management</h4>
+          <!-- Export Backup Button -->
+          <button type="button" class="btn btn-sm btn-outline-secondary text-light border-secondary px-2 py-1" style="font-size: 0.725rem;" onclick="exportLocalStorageBackup()">
+            💾 Export Backup
+          </button>
+        </div>
+        
         <div class="mb-3">
           <div class="input-group">
             <input type="text" class="form-control" id="historySearch" placeholder="🔍 Search exercise, day, or date...">
