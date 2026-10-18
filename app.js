@@ -81,7 +81,6 @@ function syncOfflineQueue() {
     else fetchData();
   })
   .catch(() => {
-    // Put back if still offline
     queue.unshift(payload);
     localStorage.setItem('offline_workout_queue', JSON.stringify(queue));
   });
@@ -252,7 +251,7 @@ function evaluatePhysiqueBalance() {
     let nameLower = ex.toLowerCase();
     let wt = lastLogs[ex].weight || 0;
     if (wt > 0 && lastLogs[ex].weightUnit !== 'Bodyweight') {
-      if (nameLower.includes('squat') || nameLower.includes('leg') || nameLower.includes('calf') || nameLower.includes('deadlift') || nameLower.includes('hip') || nameLower.includes('thrust')) {
+      if (isLowerBodyExercise(ex)) {
         lowerWeights.push(wt);
       } else if (nameLower.includes('bench') || nameLower.includes('press') || nameLower.includes('row') || nameLower.includes('pull') || nameLower.includes('curl') || nameLower.includes('extension')) {
         upperWeights.push(wt);
@@ -272,7 +271,7 @@ function evaluatePhysiqueBalance() {
   let analysis = `<b>Average Lifts:</b> Upper (~${avgUpper.toFixed(1)} kg) vs Lower (~${avgLower.toFixed(1)} kg)<br>`;
   
   if (avgLower > 0 && avgUpper > 0 && avgLower < avgUpper * 1.1) {
-    analysis += `⚠️ <strong class="text-warning">Chicken leg risk detected!</strong> Boost intensity on <b>Lower Strength</b> days.`;
+    analysis += `⚠️ <strong class="text-warning">Upper-Dominant Imbalance Detected!</strong> Lower body strength lags behind upper body. <b>Correction Protocol Active:</b> Forcing +5kg lower-body progression bias.`;
   } else {
     analysis += `✅ <strong class="text-success">Well balanced!</strong> Upper and lower proportions look solid.`;
   }
@@ -310,7 +309,6 @@ function isChickenLegRiskActive() {
   let lowerWeights = [];
 
   Object.keys(lastLogs).forEach(ex => {
-    let nameLower = ex.toLowerCase();
     let wt = lastLogs[ex].weight || 0;
     if (wt > 0 && lastLogs[ex].weightUnit !== 'Bodyweight') {
       if (isLowerBodyExercise(ex)) {
@@ -674,7 +672,7 @@ function updateProgressionAdvice() {
     } else if (chickenLegActive && isLower && last.rir <= 2) {
       targetWeight = roundToGymIncrement(lastWeight + 5);
       targetReps = Array(targetSets).fill(minRepTarget).join('/');
-      rationale = `⚖️ <strong class="text-warning">Auto-Balancing Boost:</strong> Lagging lower body detected! Forcing +5kg plate jump to <b>${targetWeight}kg</b>.`;
+      rationale = `⚖️ <strong class="text-warning">Auto-Balancing Boost:</strong> Upper-dominant asymmetry detected! Forcing +5kg plate jump on lower body to <b>${targetWeight}kg</b>.`;
     } else if (hitCeilingAcrossAllSets && last.rir <= 2) {
       targetWeight = roundToGymIncrement(lastWeight + 5);
       targetReps = Array(targetSets).fill(minRepTarget).join('/');
@@ -728,7 +726,6 @@ function applyPrescription() {
   setTimeout(() => { btn.textContent = '📥 Apply Target'; }, 1500);
 }
 
-// ⏱️ Drift-free timestamp-based rest timer
 function startRestTimer(seconds) {
   clearInterval(restTimerInterval);
   const display = document.getElementById('timerDisplay');
@@ -802,7 +799,6 @@ document.getElementById('workoutForm').addEventListener('submit', function(e) {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   })
   .catch(() => {
-    // 📴 Offline Caching Fallback
     let queue = JSON.parse(localStorage.getItem('offline_workout_queue') || '[]');
     queue.push(payload);
     localStorage.setItem('offline_workout_queue', JSON.stringify(queue));
