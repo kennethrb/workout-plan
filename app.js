@@ -959,7 +959,8 @@ function updateExerciseFormPreview() {
   }
 
   if (gifUrl && gifUrl.trim() !== "") {
-    gifImg.src = gifUrl;
+    // Route through free image proxy to bypass CORS / hotlinking blocks
+    gifImg.src = "https://images.weserv.nl/?url=" + encodeURIComponent(gifUrl);
     previewCard.style.display = 'block';
   } else {
     previewCard.style.display = 'none';
