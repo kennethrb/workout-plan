@@ -153,6 +153,7 @@
                   <span class="fs-6">🤖</span>
                   <h6 class="text-xtreme-red fw-bold mb-0 text-uppercase" style="letter-spacing: 0.5px; font-size: 0.825rem;">Rep-Range Coach Advisor</h6>
                 </div>
+                
                 <div class="d-flex gap-2">
                   <button type="button" class="btn btn-sm btn-outline-danger fw-semibold px-2 py-1" id="plateauBreakerBtn" style="font-size: 0.725rem; border-radius: 6px;" onclick="togglePlateauBreaker()" title="Reset stalled exercise to 80% weight">
                     🔄 Plateau Breaker
@@ -166,6 +167,16 @@
               <!-- Suggestion Content Output -->
               <div id="suggestionText" class="text-light small lh-base">
                 Select an exercise to generate exact rep-range progression targets.
+              </div>
+
+              <!-- 🏋️ Exercise Form Preview GIF Container -->
+              <div class="card shadow-sm mb-4 border-0" id="exercisePreviewCard" style="background: linear-gradient(145deg, #18181B, #121215); border-left: 4px solid var(--xtreme-yellow) !important; display: none;">
+                <div class="card-body text-center p-3">
+                  <h6 class="text-xtreme-gold fw-bold mb-2 text-uppercase" style="font-size: 0.75rem; letter-spacing: 0.5px;">🎥 Form Demonstration</h6>
+                  <div class="d-flex justify-content-center">
+                    <img id="exerciseGifPreview" src="" alt="Exercise Form GIF" class="rounded border border-secondary" style="max-height: 160px; object-fit: contain; background: #000;" />
+                  </div>
+                </div>
               </div>
 
             </div>
