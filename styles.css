@@ -216,3 +216,7 @@ h4, h6 {
 .text-xtreme-red { color: var(--xtreme-crimson) !important; }
 .text-xtreme-gold { color: var(--xtreme-yellow) !important; }
 .text-primary { color: var(--xtreme-crimson) !important; }
+/* Ensure muted helper text remains easily readable on dark background surfaces */
+.text-muted {
+  color: #A1A1AA !important; /* Lighter slate gray for optimal readability */
+}
