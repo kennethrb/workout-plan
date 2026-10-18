@@ -52,18 +52,22 @@ function runFullQA() {
   assert(isLowerBodyExercise("Deadlift") === true, "Deadlift flagged as lower body");
   assert(isLowerBodyExercise("Bench Press") === false, "Bench Press flagged as upper body");
 
-  // Backup real live globalData before overriding for unit test
+  // Save full backup of real live globalData
   let mockGlobalDataBackup = JSON.parse(JSON.stringify(globalData));
 
-  // Explicit Mock for Test 3 & Test 4 (Mocks BOTH lastLogs and history)
-  globalData.lastLogs = {
-    "Bench Press": { weight: 50, weightUnit: "Kilogram (kg)", sets: 5, reps: "5/5/5/5/5", rir: 2 },
-    "Back Squat": { weight: 30, weightUnit: "Kilogram (kg)", sets: 5, reps: "8/8/8/8/8", rir: 2 }
+  // FORCE Mock globalData completely clean for Unit Tests 3 & 4
+  globalData = {
+    lastLogs: {
+      "Bench Press": { weight: 50, weightUnit: "Kilogram (kg)", sets: 5, reps: "5/5/5/5/5", rir: 2 },
+      "Back Squat": { weight: 30, weightUnit: "Kilogram (kg)", sets: 5, reps: "8/8/8/8/8", rir: 2 }
+    },
+    history: [
+      { exercise: "Bench Press", weight: 50, weightUnit: "Kilogram (kg)", sets: 5, reps: "5/5/5/5/5", rir: 2, date: "10/18/2026" },
+      { exercise: "Back Squat", weight: 30, weightUnit: "Kilogram (kg)", sets: 5, reps: "8/8/8/8/8", rir: 2, date: "10/18/2026" }
+    ],
+    exercises: ["Bench Press", "Back Squat"],
+    currentPhase: "Accumulation (Volume)"
   };
-  globalData.history = [
-    { exercise: "Bench Press", weight: 50, weightUnit: "Kilogram (kg)", sets: 5, reps: "5/5/5/5/5", rir: 2, date: "10/18/2026" },
-    { exercise: "Back Squat", weight: 30, weightUnit: "Kilogram (kg)", sets: 5, reps: "8/8/8/8/8", rir: 2, date: "10/18/2026" }
-  ];
   
   let imbalanceActive = isChickenLegRiskActive();
   assert(imbalanceActive === true, "Upper-Dominant imbalance correctly detected (Squat 30kg vs Bench 50kg)");
@@ -79,6 +83,15 @@ function runFullQA() {
   if (phaseInput) phaseInput.value = "Accumulation (Volume)";
 
   if (exerciseSelect) {
+    // Add Back Squat to dropdown option if missing in DOM
+    let optionExists = Array.from(exerciseSelect.options).some(opt => opt.value === "Back Squat");
+    if (!optionExists) {
+      let opt = document.createElement("option");
+      opt.value = "Back Squat";
+      opt.textContent = "Back Squat";
+      exerciseSelect.appendChild(opt);
+    }
+
     exerciseSelect.value = "Back Squat";
     updateProgressionAdvice();
     
@@ -88,9 +101,10 @@ function runFullQA() {
     console.warn("⚠️ Exercise dropdown not found in DOM, skipping UI-bound advice test.");
   }
 
-  // Restore live globalData and original phase for remaining tests
+  // RESTORE LIVE DATA
   if (phaseInput) phaseInput.value = originalPhaseVal;
   globalData = JSON.parse(JSON.stringify(mockGlobalDataBackup));
+  if (typeof updateExerciseDropdown === 'function') updateExerciseDropdown(true);
 
   // ------------------------------------------------
   // TEST 5: Live Database Data Integrity & Real Records
