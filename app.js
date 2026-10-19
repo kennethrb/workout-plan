@@ -1031,7 +1031,7 @@ function renderProgressChart() {
   }
 
   let chartLabel = isE1RM ? 'Estimated 1-Rep Max (kg)' : 'Working Weight (kg)';
-  let chartColor = isE1RM ? '#FFE500' : '#C8102E';
+  let chartColor = isE1RM ? '#FBBF24' : '#E11D48';
 
   myProgressChart = new Chart(ctx, {
     type: 'line',
