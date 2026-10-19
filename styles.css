@@ -1,14 +1,14 @@
 :root {
-  --xtreme-bg: #0F0F10;
-  --xtreme-surface: #18181B;
-  --xtreme-card-border: #27272A;
-  --xtreme-crimson: #C8102E;
-  --xtreme-crimson-hover: #A00D24;
-  --xtreme-yellow: #FFE500;
-  --xtreme-text-main: #FFFFFF;
-  --xtreme-text-muted: #9CA3AF;
-  --xtreme-text-bright: #F8FAFC;
-  --radius-lg: 12px;
+  --xtreme-bg: #09090B;         /* Ultra-clean deep obsidian dark mode */
+  --xtreme-surface: #121214;    /* Rich matte card surface */
+  --xtreme-card-border: #27272A;/* Crisp subtle zinc border */
+  --xtreme-crimson: #E11D48;    /* Premium athletic crimson (Rose-600) */
+  --xtreme-crimson-hover: #BE123C;
+  --xtreme-yellow: #FBBF24;     /* Sophisticated warm amber-gold */
+  --xtreme-text-main: #FAFAFA;  /* Clean high-contrast white */
+  --xtreme-text-muted: #A1A1AA; /* Slate gray helper text */
+  --xtreme-text-bright: #FFFFFF;
+  --radius-lg: 14px;
   --radius-md: 8px;
 }
 
@@ -36,7 +36,7 @@ body {
 .brand-header h2 {
   font-size: 1.5rem;
   font-weight: 900;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.03em;
   text-transform: uppercase;
   color: var(--xtreme-text-main);
   margin: 0;
@@ -46,13 +46,16 @@ body {
 .brand-header h2 span {
   color: var(--xtreme-crimson);
   display: block;
+  font-size: 1.65rem;
+  letter-spacing: 0.05em;
+  margin-top: 2px;
 }
 
 .card {
   background-color: var(--xtreme-surface) !important;
   border: 1px solid var(--xtreme-card-border) !important;
   border-radius: var(--radius-lg);
-  box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.7);
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
   color: var(--xtreme-text-main) !important;
   padding: 20px;
   margin-bottom: 20px;
@@ -66,21 +69,22 @@ h4, h6 {
 
 .form-label {
   font-weight: 700;
-  font-size: 0.8rem;
+  font-size: 0.775rem;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.07em;
   color: var(--xtreme-text-muted) !important;
   margin-bottom: 6px;
 }
 
 .form-control, .form-select {
-  background-color: #121215 !important;
+  background-color: #0F0F11 !important;
   color: var(--xtreme-text-main) !important;
   border: 1px solid var(--xtreme-card-border) !important;
   border-radius: var(--radius-md);
   padding: 12px 14px;
   font-size: 1rem;
   min-height: 48px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .form-control::placeholder {
@@ -90,14 +94,14 @@ h4, h6 {
 
 .form-control:focus, .form-select:focus {
   border-color: var(--xtreme-crimson) !important;
-  box-shadow: 0 0 0 3px rgba(200, 16, 46, 0.25) !important;
+  box-shadow: 0 0 0 3px rgba(225, 29, 72, 0.2) !important;
   color: var(--xtreme-text-main) !important;
-  background-color: #121215 !important;
+  background-color: #0F0F11 !important;
 }
 
 .advisor-box {
-  background-color: rgba(200, 16, 46, 0.06);
-  border: 1px solid rgba(200, 16, 46, 0.25);
+  background-color: rgba(225, 29, 72, 0.05);
+  border: 1px solid rgba(225, 29, 72, 0.2);
   border-left: 4px solid var(--xtreme-crimson);
   padding: 14px;
   border-radius: var(--radius-md);
@@ -106,8 +110,8 @@ h4, h6 {
 }
 
 .balance-box {
-  background-color: rgba(255, 229, 0, 0.05);
-  border: 1px solid rgba(255, 229, 0, 0.25);
+  background-color: rgba(251, 191, 36, 0.05);
+  border: 1px solid rgba(251, 191, 36, 0.2);
   border-left: 4px solid var(--xtreme-yellow);
   padding: 14px;
   border-radius: var(--radius-md);
@@ -133,9 +137,9 @@ h4, h6 {
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  font-size: 1rem;
+  font-size: 0.95rem;
   min-height: 50px;
-  box-shadow: 0 6px 16px rgba(200, 16, 46, 0.4);
+  box-shadow: 0 4px 14px rgba(225, 29, 72, 0.35);
   transition: background-color 0.15s ease, transform 0.1s ease;
 }
 
@@ -147,7 +151,7 @@ h4, h6 {
 #deleteConfirmBanner {
   border-radius: var(--radius-md);
   border: 1px solid var(--xtreme-crimson) !important;
-  background-color: rgba(200, 16, 46, 0.15) !important;
+  background-color: rgba(225, 29, 72, 0.12) !important;
 }
 
 #loading {
@@ -179,7 +183,7 @@ h4, h6 {
 
 /* High Contrast Progress Bars & Status Labels */
 .progress-bar-container {
-  background-color: #121215;
+  background-color: #0F0F11;
   border: 1px solid var(--xtreme-card-border);
   border-radius: 4px;
   height: 8px;
@@ -206,7 +210,7 @@ h4, h6 {
 }
 
 .status-label-optimal {
-  color: #FFFFFF !important;
+  color: #FAFAFA !important;
 }
 
 .status-label-over {
@@ -216,7 +220,6 @@ h4, h6 {
 .text-xtreme-red { color: var(--xtreme-crimson) !important; }
 .text-xtreme-gold { color: var(--xtreme-yellow) !important; }
 .text-primary { color: var(--xtreme-crimson) !important; }
-/* Ensure muted helper text remains easily readable on dark background surfaces */
 .text-muted {
-  color: #A1A1AA !important; /* Lighter slate gray for optimal readability */
+  color: var(--xtreme-text-muted) !important;
 }
