@@ -625,71 +625,94 @@ function updateProgressionAdvice() {
   const box = document.getElementById('suggestionText');
   const compound = isCompoundExercise(exercise);
   
-  let defaultSets = compound ? 4 : 3;
+  // ⏱️ Check if the exercise is a timed/isometric hold (e.g., Plank)
+  const isTimed = exercise.toLowerCase().includes('plank') || 
+                  exercise.toLowerCase().includes('sec') || 
+                  exercise.toLowerCase().includes('hold');
+
+  let defaultSets = compound ? 4 : (isTimed ? 2 : 3);
   let minRepTarget = compound ? 6 : 10;
   let maxRepCeiling = compound ? 10 : 15;
-  let defaultRepsStr = compound ? "8/8/8/8" : "12/12/12";
+  
+  let defaultRepsStr = isTimed ? "45/45" : (compound ? "8/8/8/8" : "12/12/12");
+  
+  // If it's a timed exercise, pull target duration from reference sheet if available
+  if (isTimed && globalData.reference && globalData.reference[exercise] && globalData.reference[exercise].reps) {
+    defaultRepsStr = globalData.reference[exercise].reps;
+  }
 
   let targetSets = defaultSets;
   let targetReps = defaultRepsStr;
-  let targetWeight = 20;
+  let targetWeight = isTimed ? 0 : 20;
   let rationale = "";
 
   const chickenLegActive = isChickenLegRiskActive();
   const isLower = isLowerBodyExercise(exercise);
 
   if (!last) {
-    rationale = `No prior logs found. Starting baseline for this ${compound ? 'Compound (4 sets, 6–10 reps)' : 'Isolation (3 sets, 10–15 reps)'} movement.`;
+    if (isTimed) {
+      rationale = `No prior logs found. Starting baseline for timed hold (${targetSets} sets, target duration: ${defaultRepsStr}).`;
+    } else {
+      rationale = `No prior logs found. Starting baseline for this ${compound ? 'Compound (4 sets, 6–10 reps)' : 'Isolation (3 sets, 10–15 reps)'} movement.`;
+    }
     currentPrescription = { weight: targetWeight, sets: targetSets, reps: defaultRepsStr, rir: 2 };
   } else {
     let lastWeight = last.weight || 0;
     let lastSets = last.sets || defaultSets;
     let rawReps = (last.reps || defaultRepsStr).toString().replace(/^'/, '');
     
-    let repSets = rawReps.split('/').map(r => parseInt(r.trim()) || 0);
-    let hitCeilingAcrossAllSets = repSets.length > 0 && repSets.every(r => r >= maxRepCeiling);
-
-    targetWeight = roundToGymIncrement(lastWeight);
-    targetSets = lastSets;
-
-    if (isPlateauBreakerActive) {
-      targetSets = compound ? 4 : 3;
-      let resetRaw = lastWeight * 0.8;
-      targetWeight = roundToGymIncrement(resetRaw);
-      if (targetWeight <= 0) targetWeight = 5;
-      targetReps = Array(targetSets).fill(minRepTarget).join('/');
-      rationale = `🔄 <strong class="text-danger">Plateau Breaker Active:</strong> Resetting sets to ${targetSets}, weight to ~80% (${targetWeight}kg), and reps to [${targetReps}].`;
-    } else if (phase.includes("Deload")) {
-      targetWeight = Math.max(0, targetWeight - 5);
-      targetSets = Math.max(2, targetSets - 1);
+    // For timed exercises, keep the duration string as-is instead of splitting into integer rep ceilings
+    if (isTimed) {
+      targetWeight = isTimed && lastWeight === 0 ? 0 : roundToGymIncrement(lastWeight);
+      targetSets = lastSets;
       targetReps = rawReps;
-      rationale = `🛌 <b>Deload Phase:</b> Dropped down one 5kg plate (${targetWeight}kg) with lower volume for active recovery.`;
-    } else if (joints === "Mild Tweak") {
-      targetWeight = Math.max(0, targetWeight - 5);
-      targetReps = rawReps;
-      rationale = `🛡️ <b>Joint Safety Mode:</b> Reduced by one 5kg plate (${targetWeight}kg) due to reported discomfort.`;
-    } else if (sleep === "Poor" || stress === "High") {
-      targetWeight = roundToGymIncrement(lastWeight);
-      targetReps = rawReps;
-      rationale = `⚠️ <b>Fatigue Flag:</b> Holding weight steady at ${targetWeight}kg. Focus on clean execution within your target range.`;
-    } else if (chickenLegActive && isLower && last.rir <= 2) {
-      targetWeight = roundToGymIncrement(lastWeight + 5);
-      targetReps = Array(targetSets).fill(minRepTarget).join('/');
-      rationale = `⚖️ <strong class="text-warning">Auto-Balancing Boost:</strong> Upper-dominant asymmetry detected! Forcing +5kg plate jump on lower body to <b>${targetWeight}kg</b>.`;
-    } else if (hitCeilingAcrossAllSets && last.rir <= 2) {
-      targetWeight = roundToGymIncrement(lastWeight + 5);
-      targetReps = Array(targetSets).fill(minRepTarget).join('/');
-      rationale = `🚀 <strong class="text-success">Rep Ceiling Reached!</strong> Stepping up to <b>${targetWeight}kg</b>.`;
+      rationale = `⏱️ <strong class="text-warning">Timed Hold Target:</strong> Maintain or increase hold duration towards <b>${rawReps}</b>.`;
     } else {
+      let repSets = rawReps.split('/').map(r => parseInt(r.trim()) || 0);
+      let hitCeilingAcrossAllSets = repSets.length > 0 && repSets.every(r => r >= maxRepCeiling);
+
       targetWeight = roundToGymIncrement(lastWeight);
-      targetReps = rawReps;
-      rationale = `📌 <strong class="text-warning">Rep-Range Progression:</strong> Hold at ${targetWeight}kg. Push your reps towards <b>${maxRepCeiling}</b>.`;
+      targetSets = lastSets;
+
+      if (isPlateauBreakerActive) {
+        targetSets = compound ? 4 : 3;
+        let resetRaw = lastWeight * 0.8;
+        targetWeight = roundToGymIncrement(resetRaw);
+        if (targetWeight <= 0) targetWeight = 5;
+        targetReps = Array(targetSets).fill(minRepTarget).join('/');
+        rationale = `🔄 <strong class="text-danger">Plateau Breaker Active:</strong> Resetting sets to ${targetSets}, weight to ~80% (${targetWeight}kg), and reps to [${targetReps}].`;
+      } else if (phase.includes("Deload")) {
+        targetWeight = Math.max(0, targetWeight - 5);
+        targetSets = Math.max(2, targetSets - 1);
+        targetReps = rawReps;
+        rationale = `🛌 <b>Deload Phase:</b> Dropped down one 5kg plate (${targetWeight}kg) with lower volume for active recovery.`;
+      } else if (joints === "Mild Tweak") {
+        targetWeight = Math.max(0, targetWeight - 5);
+        targetReps = rawReps;
+        rationale = `🛡️ <b>Joint Safety Mode:</b> Reduced by one 5kg plate (${targetWeight}kg) due to reported discomfort.`;
+      } else if (sleep === "Poor" || stress === "High") {
+        targetWeight = roundToGymIncrement(lastWeight);
+        targetReps = rawReps;
+        rationale = `⚠️ <b>Fatigue Flag:</b> Holding weight steady at ${targetWeight}kg. Focus on clean execution within your target range.`;
+      } else if (chickenLegActive && isLower && last.rir <= 2) {
+        targetWeight = roundToGymIncrement(lastWeight + 5);
+        targetReps = Array(targetSets).fill(minRepTarget).join('/');
+        rationale = `⚖️ <strong class="text-warning">Auto-Balancing Boost:</strong> Upper-dominant asymmetry detected! Forcing +5kg plate jump on lower body to <b>${targetWeight}kg</b>.`;
+      } else if (hitCeilingAcrossAllSets && last.rir <= 2) {
+        targetWeight = roundToGymIncrement(lastWeight + 5);
+        targetReps = Array(targetSets).fill(minRepTarget).join('/');
+        rationale = `🚀 <strong class="text-success">Rep Ceiling Reached!</strong> Stepping up to <b>${targetWeight}kg</b>.`;
+      } else {
+        targetWeight = roundToGymIncrement(lastWeight);
+        targetReps = rawReps;
+        rationale = `📌 <strong class="text-warning">Rep-Range Progression:</strong> Hold at ${targetWeight}kg. Push your reps towards <b>${maxRepCeiling}</b>.`;
+      }
     }
 
     currentPrescription = { weight: targetWeight, sets: targetSets, reps: targetReps, rir: last.rir <= 1 ? 2 : last.rir };
   }
 
-  let plateHint = currentPrescription.weight > 0 ? `
+  let plateHint = (!isTimed && currentPrescription.weight > 0) ? `
     <div class="mt-2 pt-2 border-top border-secondary border-opacity-25 text-warning fw-medium" style="font-size: 0.8rem;">
       🔩 <b>Plate Setup:</b> ${calculatePlates(currentPrescription.weight)}
     </div>` : '';
@@ -697,16 +720,16 @@ function updateProgressionAdvice() {
   let html = `
     <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
       <span class="badge bg-dark border border-warning text-xtreme-gold font-monospace px-2 py-1" style="font-size: 0.8rem;">
-        🎯 Prescribed: ${currentPrescription.weight} kg
+        🎯 Prescribed: ${isTimed ? 'Bodyweight / ' + currentPrescription.weight + 'kg' : currentPrescription.weight + ' kg'}
       </span>
       <span class="badge bg-secondary text-light px-2 py-1" style="font-size: 0.75rem;">
         ${currentPrescription.sets} Sets
       </span>
       <span class="badge bg-secondary text-light px-2 py-1" style="font-size: 0.75rem;">
-        Reps: [${currentPrescription.reps}]
+        ${isTimed ? 'Duration: [' : 'Reps: ['}${currentPrescription.reps}]
       </span>
       <span class="badge bg-outline-secondary text-muted px-2 py-1" style="font-size: 0.7rem;">
-        ${compound ? 'Compound (6–10)' : 'Isolation (10–15)'}
+        ${isTimed ? 'Isometric Hold' : (compound ? 'Compound (6–10)' : 'Isolation (10–15)')}
       </span>
     </div>
     <div class="text-light mt-1" style="font-size: 0.825rem;">
