@@ -732,10 +732,11 @@ function updateProgressionAdvice() {
         rationale = `⚖️ <strong class="text-warning">Auto-Balancing Boost:</strong> Upper-dominant asymmetry detected! Forcing +5kg plate jump on lower body to <b>${targetWeight}kg</b>.`;
       } 
       else if (
-          e1rmTrend >= 2.5 &&
+          e1rmTrend >= 5 &&
           compound &&
           last.rir <= 2
-      ) {
+      ) 
+      {
       
           targetWeight =
             roundToGymIncrement(lastWeight + 5);
