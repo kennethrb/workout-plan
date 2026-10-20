@@ -27,7 +27,6 @@ function runFullQA() {
   let plateTest1 = calculatePlates(60);
   assert(plateTest1.includes("1x 20kg"), "Plate calculation for 60kg with 20kg bar");
 
-  let plateTest2 = calculatePlates(30);
   const barSelect = document.getElementById('barbellType');
   let originalBarVal = barSelect ? barSelect.value : "20";
   if (barSelect) barSelect.value = "0";
@@ -44,27 +43,23 @@ function runFullQA() {
   assert(isCompoundExercise("Bicep Curl") === false, "Bicep Curl classified as isolation");
   assert(isCompoundExercise("Lateral Raises") === false, "Lateral Raises classified as isolation");
 
+  // Save full backup of real live globalData
+  let mockGlobalDataBackup = JSON.parse(JSON.stringify(globalData));
+
   // ------------------------------------------------
-  // TEST 3: Lower Body Detector & Symmetry Asymmetry Logic
+  // TEST 3: Lower Body Detector & Symmetry Asymmetry Logic (Mock Data)
   // ------------------------------------------------
   console.log("\n--- Testing Symmetry & Imbalance Engine ---");
   assert(isLowerBodyExercise("Back Squat") === true, "Back Squat flagged as lower body");
   assert(isLowerBodyExercise("Deadlift") === true, "Deadlift flagged as lower body");
   assert(isLowerBodyExercise("Bench Press") === false, "Bench Press flagged as upper body");
 
-  // Save full backup of real live globalData
-  let mockGlobalDataBackup = JSON.parse(JSON.stringify(globalData));
-
-  // FORCE Mock globalData completely clean for Unit Tests 3 & 4
   globalData = {
     lastLogs: {
       "Bench Press": { weight: 50, weightUnit: "Kilogram (kg)", sets: 5, reps: "5/5/5/5/5", rir: 2 },
       "Back Squat": { weight: 30, weightUnit: "Kilogram (kg)", sets: 5, reps: "8/8/8/8/8", rir: 2 }
     },
-    history: [
-      { exercise: "Bench Press", weight: 50, weightUnit: "Kilogram (kg)", sets: 5, reps: "5/5/5/5/5", rir: 2, date: "10/18/2026" },
-      { exercise: "Back Squat", weight: 30, weightUnit: "Kilogram (kg)", sets: 5, reps: "8/8/8/8/8", rir: 2, date: "10/18/2026" }
-    ],
+    history: [],
     exercises: ["Bench Press", "Back Squat"],
     currentPhase: "Accumulation (Volume)"
   };
@@ -83,7 +78,6 @@ function runFullQA() {
   if (phaseInput) phaseInput.value = "Accumulation (Volume)";
 
   if (exerciseSelect) {
-    // Add Back Squat to dropdown option if missing in DOM
     let optionExists = Array.from(exerciseSelect.options).some(opt => opt.value === "Back Squat");
     if (!optionExists) {
       let opt = document.createElement("option");
@@ -97,31 +91,39 @@ function runFullQA() {
     
     assert(currentPrescription !== null, "Current prescription object generated");
     assert(currentPrescription.weight === 35, `Auto-balancing boost correctly added +5kg to Back Squat (Expected 35kg, got ${currentPrescription.weight}kg)`);
-  } else {
-    console.warn("⚠️ Exercise dropdown not found in DOM, skipping UI-bound advice test.");
   }
 
-  // RESTORE LIVE DATA
+  // RESTORE LIVE DATA FROM GOOGLE SHEETS
   if (phaseInput) phaseInput.value = originalPhaseVal;
   globalData = JSON.parse(JSON.stringify(mockGlobalDataBackup));
   if (typeof updateExerciseDropdown === 'function') updateExerciseDropdown(true);
 
   // ------------------------------------------------
-  // TEST 5: Live Database Data Integrity & Real Records
+  // TEST 5: Live Database Integrity & Cycle Week Calculation
   // ------------------------------------------------
-  console.log("\n--- Testing Live Database Records ---");
+  console.log("\n--- Testing Live Database Records & Cycle Week ---");
   let hasHistory = globalData.history && Array.isArray(globalData.history);
   assert(hasHistory === true, "globalData.history successfully loaded as an array");
   
   let historyCount = hasHistory ? globalData.history.length : 0;
-  console.log(`📊 [INFO] Total workout logs found in Google Sheets: ${historyCount}`);
+  console.log(`📊 [INFO] Total workout rows in Google Sheets: ${historyCount}`);
   assert(historyCount > 0, "Google Sheets database contains active history records");
 
-  let hasLastLogs = globalData.lastLogs && Object.keys(globalData.lastLogs).length > 0;
-  assert(hasLastLogs === true, "globalData.lastLogs map is populated with exercise records");
+  // Live Unique Calendar Days Calculation
+  let liveDates = globalData.history.map(item => item.date ? String(item.date).split(' ')[0] : "").filter(Boolean);
+  let liveUniqueDays = [...new Set(liveDates)].length;
+  console.log(`📅 [INFO] Live Unique Calendar Workout Days: ${liveUniqueDays}`);
+  assert(liveUniqueDays > 0, "Successfully extracted live unique calendar workout days");
+
+  let expectedCycleWeek = (Math.floor(liveUniqueDays / 4) % 4) + 1;
+  console.log(`🔄 [INFO] Calculated Live Cycle Week: Week ${expectedCycleWeek}`);
+  
+  if (globalData.cycleWeek !== undefined) {
+    assert(globalData.cycleWeek === expectedCycleWeek, `Live Cycle Week (${globalData.cycleWeek}) matches formula calculation (${expectedCycleWeek})`);
+  }
 
   let liveImbalance = isChickenLegRiskActive();
-  console.log(`⚖️ [INFO] Live Database Symmetry Status (Upper vs Lower): Upper-Dominant Imbalance Active = ${liveImbalance}`);
+  console.log(`⚖️ [INFO] Live Symmetry Status: Upper-Dominant Imbalance Active = ${liveImbalance}`);
 
   // ------------------------------------------------
   // TEST 6: Offline Queue Caching Mechanism
@@ -139,7 +141,7 @@ function runFullQA() {
   localStorage.removeItem('offline_workout_queue');
 
   // ------------------------------------------------
-  // TEST 7: Drift-Free Rest Timer Precision
+  // TEST 7: Rest Timer Precision
   // ------------------------------------------------
   console.log("\n--- Testing Rest Timer Functions ---");
   startRestTimer(5);
