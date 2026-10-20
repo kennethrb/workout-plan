@@ -150,6 +150,20 @@ function runFullQA() {
   let timerWidget = document.getElementById('restTimerWidget');
   assert(timerWidget.style.display === 'none', "Rest timer widget dismissed properly on stop");
 
+  console.log("\n--- Testing Warm-Up Generator ---");
+  
+  let warmups = generateWarmupSets(100);
+  
+  assert(
+    warmups.length > 0,
+    "Warmup sets generated"
+  );
+  
+  assert(
+    warmups[warmups.length - 1].weight < 100,
+    "Warmup weight remains below working weight"
+  );
+
   // ------------------------------------------------
   // SUMMARY REPORT
   // ------------------------------------------------
