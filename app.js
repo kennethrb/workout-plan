@@ -310,26 +310,36 @@ function generateWarmupSets(targetWeight) {
       ? parseFloat(barSelect.value)
       : 20;
 
-  if (!targetWeight || targetWeight <= emptyBar) {
+  const warmupBase =
+    emptyBar > 0
+      ? emptyBar
+      : Math.max(
+          5,
+          roundToGymIncrement(targetWeight * 0.3)
+        );
+
+  if (!targetWeight || targetWeight <= warmupBase) {
     return [];
   }
 
+  // Light Loads
   if (targetWeight <= 40) {
 
     return [
       {
-        weight: emptyBar,
+        weight: warmupBase,
         reps: 10
       }
     ].filter(set => set.weight < targetWeight);
 
   }
 
+  // Moderate Loads
   if (targetWeight <= 80) {
 
     return [
       {
-        weight: emptyBar,
+        weight: warmupBase,
         reps: 10
       },
       {
@@ -344,9 +354,10 @@ function generateWarmupSets(targetWeight) {
 
   }
 
+  // Heavy Loads
   return [
     {
-      weight: emptyBar,
+      weight: warmupBase,
       reps: 10
     },
     {
