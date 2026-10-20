@@ -631,10 +631,41 @@ function updateProgressionAdvice() {
                   exercise.toLowerCase().includes('hold');
 
   let defaultSets = compound ? 4 : (isTimed ? 2 : 3);
-  let minRepTarget = compound ? 6 : 10;
-  let maxRepCeiling = compound ? 10 : 15;
   
-  let defaultRepsStr = isTimed ? "45/45" : (compound ? "8/8/8/8" : "12/12/12");
+  let minRepTarget;
+  let maxRepCeiling;
+  let defaultRepsStr;
+  
+  // Phase-Specific Targets
+  if (phase.includes("Accumulation")) {
+  
+      minRepTarget = compound ? 8 : 12;
+      maxRepCeiling = compound ? 12 : 15;
+      defaultRepsStr = compound ? "10/10/10/10" : "12/12/12";
+  
+  }
+  else if (phase.includes("Intensification")) {
+  
+      minRepTarget = compound ? 5 : 8;
+      maxRepCeiling = compound ? 8 : 12;
+      defaultRepsStr = compound ? "6/6/6/6" : "10/10/10";
+  
+  }
+  else if (phase.includes("Peak")) {
+  
+      minRepTarget = compound ? 3 : 6;
+      maxRepCeiling = compound ? 5 : 8;
+      defaultRepsStr = compound ? "4/4/4/4" : "8/8/8";
+  
+  }
+  else {
+  
+      // Deload fallback
+      minRepTarget = compound ? 6 : 10;
+      maxRepCeiling = compound ? 10 : 15;
+      defaultRepsStr = compound ? "8/8/8/8" : "12/12/12";
+  
+  }
   
   // If it's a timed exercise, pull target duration from reference sheet if available
   if (isTimed && globalData.reference && globalData.reference[exercise] && globalData.reference[exercise].reps) {
@@ -670,6 +701,7 @@ function updateProgressionAdvice() {
     } else {
       let repSets = rawReps.split('/').map(r => parseInt(r.trim()) || 0);
       let hitCeilingAcrossAllSets = repSets.length > 0 && repSets.every(r => r >= maxRepCeiling);
+      let e1rmTrend = getExerciseE1RMTrend(exercise);
 
       targetWeight = roundToGymIncrement(lastWeight);
       targetSets = lastSets;
@@ -698,10 +730,48 @@ function updateProgressionAdvice() {
         targetWeight = roundToGymIncrement(lastWeight + 5);
         targetReps = Array(targetSets).fill(minRepTarget).join('/');
         rationale = `⚖️ <strong class="text-warning">Auto-Balancing Boost:</strong> Upper-dominant asymmetry detected! Forcing +5kg plate jump on lower body to <b>${targetWeight}kg</b>.`;
-      } else if (hitCeilingAcrossAllSets && last.rir <= 2) {
+      } 
+      else if (
+          e1rmTrend >= 2.5 &&
+          compound &&
+          last.rir <= 2
+      ) {
+      
+          targetWeight =
+            roundToGymIncrement(lastWeight + 5);
+      
+          targetReps =
+            Array(targetSets)
+            .fill(minRepTarget)
+            .join('/');
+      
+          rationale =
+            `📈 <strong class="text-success">
+            e1RM Rising:</strong>
+            Estimated strength improved by
+            ${e1rmTrend.toFixed(1)}kg.
+            Progressing load proactively.`;
+      }
+      else if (hitCeilingAcrossAllSets && last.rir <= 2) {
         targetWeight = roundToGymIncrement(lastWeight + 5);
         targetReps = Array(targetSets).fill(minRepTarget).join('/');
         rationale = `🚀 <strong class="text-success">Rep Ceiling Reached!</strong> Stepping up to <b>${targetWeight}kg</b>.`;
+      } else if (
+          phase.includes("Peak") &&
+          compound &&
+          last.rir <= 2
+      ) {
+      
+          targetWeight = roundToGymIncrement(lastWeight + 5);
+      
+          targetReps = Array(targetSets)
+            .fill(minRepTarget)
+            .join('/');
+      
+          rationale =
+            `🏆 <strong class="text-warning">Peak Week:</strong> ` +
+            `Adding one 5kg jump to push performance while volume remains low.`;
+      
       } else {
         targetWeight = roundToGymIncrement(lastWeight);
         targetReps = rawReps;
@@ -871,7 +941,10 @@ function renderWeeklyVolumeTracker() {
   if (!container) return;
 
   if (badge && globalData.cycleWeek) {
-    badge.textContent = `Cycle Week ${globalData.cycleWeek} (${globalData.currentPhase || 'Intensification'})`;
+    badge.textContent =
+    `Mesocycle ${globalData.mesocycle || 1}
+     | Week ${globalData.cycleWeek}
+     | ${globalData.currentPhase || 'Accumulation'}`;
   }
 
   const history = globalData.history || [];
@@ -983,6 +1056,32 @@ function calculateEstimated1RM(weight, repsStr) {
   let e1rm = weight * (1 + (effectiveReps / 30));
   
   return Math.round(e1rm * 10) / 10;
+}
+
+function getExerciseE1RMTrend(exerciseName) {
+
+  const logs = (globalData.history || [])
+    .filter(item =>
+      item.exercise &&
+      item.exercise.toLowerCase() ===
+      exerciseName.toLowerCase()
+    );
+
+  if (logs.length < 3) return 0;
+
+  const latest =
+  (
+    calculateEstimated1RM(logs[0].weight, logs[0].reps) +
+    calculateEstimated1RM(logs[1].weight, logs[1].reps)
+  ) / 2;
+  
+  const previous =
+  calculateEstimated1RM(
+    logs[2].weight,
+    logs[2].reps
+  );
+  
+  return latest - previous;
 }
 
 // ==========================================
