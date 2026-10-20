@@ -300,6 +300,104 @@ function roundToGymIncrement(rawWeight) {
   return Math.round(rawWeight / 5) * 5;
 }
 
+function generateWarmupSets(targetWeight) {
+
+  const barSelect =
+    document.getElementById('barbellType');
+
+  const emptyBar =
+    barSelect
+      ? parseFloat(barSelect.value)
+      : 20;
+
+  if (!targetWeight || targetWeight <= emptyBar) {
+    return [];
+  }
+
+  if (targetWeight <= 40) {
+
+    return [
+      {
+        weight: emptyBar,
+        reps: 10
+      }
+    ].filter(set => set.weight < targetWeight);
+
+  }
+
+  if (targetWeight <= 80) {
+
+    return [
+      {
+        weight: emptyBar,
+        reps: 10
+      },
+      {
+        weight: roundToGymIncrement(targetWeight * 0.6),
+        reps: 5
+      },
+      {
+        weight: roundToGymIncrement(targetWeight * 0.8),
+        reps: 3
+      }
+    ].filter(set => set.weight < targetWeight);
+
+  }
+
+  return [
+    {
+      weight: emptyBar,
+      reps: 10
+    },
+    {
+      weight: roundToGymIncrement(targetWeight * 0.5),
+      reps: 5
+    },
+    {
+      weight: roundToGymIncrement(targetWeight * 0.7),
+      reps: 3
+    },
+    {
+      weight: roundToGymIncrement(targetWeight * 0.85),
+      reps: 1
+    }
+  ].filter(set => set.weight < targetWeight);
+}
+
+function renderWarmupSets(weight, exercise) {
+
+  if (!isCompoundExercise(exercise)) {
+    return "";
+  }
+
+  const warmups = generateWarmupSets(weight);
+
+  if (warmups.length === 0) {
+    return "";
+  }
+
+  let html = `
+    <div class="warmup-box mt-3">
+      <div class="fw-bold text-xtreme-gold mb-2">
+        🔥 Warm-Up Sets
+      </div>
+  `;
+
+  warmups.forEach(set => {
+
+    html += `
+      <div class="d-flex justify-content-between small mb-1">
+        <span>${set.weight}kg</span>
+        <span>${set.reps} reps</span>
+      </div>
+    `;
+  });
+
+  html += `</div>`;
+
+  return html;
+}
+
 function isLowerBodyExercise(exerciseName) {
   let nameLower = exerciseName.toLowerCase();
   return nameLower.includes('squat') || nameLower.includes('leg') || nameLower.includes('calf') || 
@@ -788,6 +886,14 @@ function updateProgressionAdvice() {
       🔩 <b>Plate Setup:</b> ${calculatePlates(currentPrescription.weight)}
     </div>` : '';
 
+  let warmupHtml =
+  (!isTimed)
+    ? renderWarmupSets(
+        currentPrescription.weight,
+        exercise
+      )
+    : "";
+
   let html = `
     <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
       <span class="badge bg-dark border border-warning text-xtreme-gold font-monospace px-2 py-1" style="font-size: 0.8rem;">
@@ -806,9 +912,11 @@ function updateProgressionAdvice() {
     <div class="text-light mt-1" style="font-size: 0.825rem;">
       ${rationale}
     </div>
-    ${plateHint}
   `;
-  box.innerHTML = html;
+  box.innerHTML =
+  html +
+  plateHint +
+  warmupHtml;
 }
 
 function applyPrescription() {
